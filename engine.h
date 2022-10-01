@@ -2,6 +2,7 @@
 #pragma once
 #define NAME "Chess Engine"
 #define BOARD_SIZE 120
+#define MAX_MOVES 2048
 
 typedef unsigned long long u64;
 
@@ -78,3 +79,42 @@ enum
   H1 = 91, H2, H3, H4, H5, H6, H7, H8,
   XX
 };
+
+// Castling
+enum
+{
+  CASTLE_WHITE_KING = 1,
+  CASTLE_WHITE_QUEEN = 2,
+  CASTLE_BLACK_KING = 4,
+  CASTLE_BLACK_QUEEN = 8
+};
+
+// Undo-move struct
+typedef struct
+{
+  int move;
+  int castle;
+  int isEnPassant;
+  int isFiftyMoves;
+  u64 positionKey;
+} UndoMove;
+
+// Board struct
+typedef struct
+{
+  int pieces[BOARD_SIZE];
+  u64 pawns[3];
+  int kingSquares[2];
+  int side;
+  int castle;
+  int isEnPassant;
+  int isFiftyMoves;
+  int currentPly;
+  int historyPly;
+  u64 positionKey;
+  int counts[13];
+  int bigPieceCounts[3];
+  int majorPieceCounts[3];
+  int minorPieceCounts[3];
+  UndoMove history[MAX_MOVES];
+} Board;

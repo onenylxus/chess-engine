@@ -1,10 +1,32 @@
 // Include
 #pragma once
+#include "stdlib.h"
+
+// Constants
+#define DEBUG
 #define NAME "Chess Engine"
-#define BOARD_SIZE 120
+#define POSITION_SIZE 120
+#define INDEX_SIZE 64
 #define MAX_MOVES 2048
 
+// Type definitions
 typedef unsigned long long u64;
+
+// Assert
+#ifndef DEBUG
+#define ASSERT(n)
+#else
+#define ASSERT(n)                    \
+  if (!n)                            \
+  {                                  \
+    printf("Assert: %s", #n);        \
+    printf("on %s ", __DATE__);      \
+    printf("at %s ", __TIME__);      \
+    printf("in file %s", __FILE__);  \
+    printf("at line %s ", __LINE__); \
+    exit(1);                         \
+  }
+#endif
 
 // Boolean
 enum {
@@ -17,12 +39,14 @@ enum
 {
   WHITE,
   BLACK,
-  BOTH
+  BOTH,
+  PLAYER_SIZE
 };
 
 // Pieces
 enum
 {
+  EMPTY,
   WHITE_PAWN,
   WHITE_KNIGHT,
   WHITE_BISHOP,
@@ -35,7 +59,7 @@ enum
   BLACK_ROOK,
   BLACK_QUEEN,
   BLACK_KING,
-  EMPTY
+  PIECE_SIZE
 };
 
 // Files
@@ -92,29 +116,30 @@ enum
 // Undo-move struct
 typedef struct
 {
-  int move;
-  int castle;
-  int isEnPassant;
-  int isFiftyMoves;
-  u64 positionKey;
+  int move;             // Move value
+  int castlePermission; // Castle permission
+  int enPassant;        // En passant position
+  int fiftyMoves;       // Move counter for fifty moves
+  u64 positionKey;      // Unique key for position
 } UndoMove;
 
 // Board struct
 typedef struct
 {
-  int pieces[BOARD_SIZE];
-  u64 pawns[3];
-  int kingSquares[2];
-  int side;
-  int castle;
-  int isEnPassant;
-  int isFiftyMoves;
-  int currentPly;
-  int historyPly;
-  u64 positionKey;
-  int counts[13];
-  int bigPieceCounts[3];
-  int majorPieceCounts[3];
-  int minorPieceCounts[3];
-  UndoMove history[MAX_MOVES];
+  int pieceStates[POSITION_SIZE]; // Piece states of each position
+  u64 pawns[PLAYER_SIZE];         // Pawn positions in bit for each player
+  int kingSquares[2];             // King positions for white and black players
+  int side;                       // Current player side to move
+  int castle;                     // Castle permutation
+  int enPassant;                  // En passant position
+  int fiftyMoves;                 // Move counter for fifty moves
+  int currentPly;                 // Current ply (half move)
+  int historyPly;                 // History ply
+  u64 positionKey;                // Unique key for position
+  int counts[PIECE_SIZE];         // Total number of pieces on the board
+  int bigPieceCounts[3];          // Number of big pieces (not pawns) on the board for each player
+  int majorPieceCounts[3];        // Number of major pieces (rooks and queens) on the board for each player
+  int minorPieceCounts[3];        // Number of minor pieces (knights and bishops) on the board for each player
+  int pieceList[PIECE_SIZE][10];  // Position of each piece sorted by piece type
+  UndoMove history[MAX_MOVES];    // Move history
 } Board;

@@ -2,9 +2,32 @@
 #include <stdio.h>
 #include "engine.h"
 
-// Default values
+//// Variables ////
+
+// Conversion arrays
 int PositionToIndex[POSITION_SIZE];
 int IndexToPosition[INDEX_SIZE];
+
+// Magic bitboard
+// This bitboard provides block and move information simultaneously
+// Hence provides faster lookup for piece movement
+const int MagicBitboard[INDEX_SIZE] =
+{
+  63, 30,  3, 32, 25, 41, 22, 33,
+  15, 50, 42, 13, 11, 53, 19, 34,
+  61, 29,  2, 51, 21, 43, 45, 10,
+  18, 47,  1, 54,  9, 57,  0, 35,
+  62, 31, 40,  4, 49,  5, 52, 26,
+  60,  6, 23, 44, 46, 27, 56, 16,
+   7, 39, 48, 24, 59, 14, 12, 55,
+  38, 28, 58, 20, 37, 17, 36,  8
+};
+
+// Bit masks
+u64 SetMask[INDEX_SIZE];
+u64 ClearMask[INDEX_SIZE];
+
+//// Getters ////
 
 // Get position from file and rank
 int getPosition(int file, int rank)
@@ -12,8 +35,10 @@ int getPosition(int file, int rank)
   return rank * 10 + file + 21;
 }
 
-// Setup board conversion
-void setupBoardConversion()
+//// Init ////
+
+// Initialize board conversion
+void initBoardConversion()
 {
   // One extra file and two extra ranks are added to each respective side
   // Hence for this chess engine the board is 12x10
@@ -72,11 +97,59 @@ void setupBoardConversion()
   }
 }
 
+// Initalize bit masks
+void initBitMask()
+{
+  for (int i = 0; i < INDEX_SIZE; ++i)
+  {
+    SetMask[i] = (1ULL << i);
+    ClearMask[i] = ~SetMask[i];
+  }
+}
+
 // Init function
 void init()
 {
-  setupBoardConversion();
+  initBoardConversion();
+  initBitMask();
 }
+
+//// Bitboard ////
+
+// Pop bit
+int popBit(u64* bb)
+{
+  u64 b = *bb ^ (*bb - 1);
+  unsigned int fold = (unsigned int)((b & 0xffffffff) ^ (b >> 32));
+  *bb &= *bb - 1;
+  return MagicBitboard[(fold * 0x783a9b23) >> 26];
+}
+
+// Set bit
+void setBit(u64* bb, int sq)
+{
+  *bb |= SetMask[sq];
+}
+
+// Clear bit
+void clearBit(u64* bb, int sq)
+{
+  *bb &= ClearMask[sq];
+}
+
+// Count bit
+int countBit(u64 b)
+{
+  int count = 0;
+  while (b)
+  {
+    count++;
+    b &= b - 1;
+  }
+  return count;
+}
+
+//// Print ////
 
 // Print position board
 void printPositionBoard()
@@ -132,6 +205,8 @@ void printBitboard(u64 key)
   }
 }
 
+//// Main ////
+
 // Main function
 int main(int argc, char* argv[])
 {
@@ -144,8 +219,14 @@ int main(int argc, char* argv[])
   printf("\n\n");
   printIndexBoard();
   printf("\n\n");
-  printBitboard(1ULL << PositionToIndex[A2]);
-  printf("\n\n");
+
+  // Testing with bitboard
+  for (int i = 0; i < INDEX_SIZE; ++i)
+  {
+    printf("Index %d:\n", i);
+    printBitboard(SetMask[i]);
+    printf("\n");
+  }
 
   // Return
   return 0;

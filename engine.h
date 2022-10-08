@@ -28,6 +28,20 @@ typedef unsigned long long u64;
   }
 #endif
 
+// Random hash key
+#ifndef DEBUG
+#define RAND_HASH
+#else
+#define RAND_HASH           \
+(                           \
+  (u64)rand() +             \
+  (u64)rand() << 15 +       \
+  (u64)rand() << 30 +       \
+  (u64)rand() << 45 +       \
+  ((u64)rand() & 0xf) << 60 \
+)
+#endif
+
 // Boolean
 enum {
   FALSE,
@@ -110,7 +124,8 @@ enum
   CASTLE_WHITE_KING = 1,
   CASTLE_WHITE_QUEEN = 2,
   CASTLE_BLACK_KING = 4,
-  CASTLE_BLACK_QUEEN = 8
+  CASTLE_BLACK_QUEEN = 8,
+  CASTLE_SIZE = 16
 };
 
 // Undo-move struct

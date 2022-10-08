@@ -27,6 +27,11 @@ const int MagicBitboard[INDEX_SIZE] =
 u64 SetMask[INDEX_SIZE];
 u64 ClearMask[INDEX_SIZE];
 
+// Hash keys
+u64 PieceKeys[PIECE_SIZE][POSITION_SIZE];
+u64 SideKey;
+u64 CastleKeys[CASTLE_SIZE];
+
 //// Getters ////
 
 // Get position from file and rank
@@ -107,11 +112,29 @@ void initBitMask()
   }
 }
 
+// Initalize hash keys
+void initHashKeys()
+{
+  for (int i = 0; i < PIECE_SIZE; ++i)
+  {
+    for (int j = 0; j < POSITION_SIZE; ++j)
+    {
+      PieceKeys[i][j] = RAND_HASH;
+    }
+  }
+  SideKey = RAND_HASH;
+  for (int i = 0; i < CASTLE_SIZE; ++i)
+  {
+    CastleKeys[i] = RAND_HASH;
+  }
+}
+
 // Init function
 void init()
 {
   initBoardConversion();
   initBitMask();
+  initHashKeys();
 }
 
 //// Bitboard ////
@@ -147,6 +170,37 @@ int countBit(u64 b)
     b &= b - 1;
   }
   return count;
+}
+
+//// Hash ////
+u64 generatePositionKey(const Board *pos)
+{
+  u64 key = 0;
+
+  for (int i = 0; i < POSITION_SIZE; ++i)
+  {
+    int piece = pos->pieceStates[i];
+    if (piece != XX && piece != EMPTY)
+    {
+      ASSERT(piece >= WHITE_PAWN && piece <= BLACK_KING);
+      key ^= PieceKeys[piece][i];
+    }
+  }
+
+  if (pos->side == WHITE)
+  {
+    key ^= SideKey;
+  }
+
+  if (pos->enPassant == XX)
+  {
+    ASSERT(pos->enPassant >= 0 && pos->enPassant <= POSITION_SIZE);
+    key ^= PieceKeys[EMPTY][pos->enPassant];
+  }
+
+  ASSERT(pos->castle >= 0 && pos->castle < CASTLE_SIZE);
+  key ^= CastleKeys[pos->castle];
+  return key;
 }
 
 //// Print ////

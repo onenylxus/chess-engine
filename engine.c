@@ -173,13 +173,13 @@ int countBit(u64 b)
 }
 
 //// Hash ////
-u64 generatePositionKey(const Board *pos)
+u64 generatePositionKey(const Board* board)
 {
   u64 key = 0;
 
   for (int i = 0; i < POSITION_SIZE; ++i)
   {
-    int piece = pos->pieceStates[i];
+    int piece = board->pieceStates[i];
     if (piece != XX && piece != EMPTY)
     {
       ASSERT(piece >= WHITE_PAWN && piece <= BLACK_KING);
@@ -187,20 +187,57 @@ u64 generatePositionKey(const Board *pos)
     }
   }
 
-  if (pos->side == WHITE)
+  if (board->side == WHITE)
   {
     key ^= SideKey;
   }
 
-  if (pos->enPassant == XX)
+  if (board->enPassant == XX)
   {
-    ASSERT(pos->enPassant >= 0 && pos->enPassant <= POSITION_SIZE);
-    key ^= PieceKeys[EMPTY][pos->enPassant];
+    ASSERT(board->enPassant >= 0 && board->enPassant <= POSITION_SIZE);
+    key ^= PieceKeys[EMPTY][board->enPassant];
   }
 
-  ASSERT(pos->castle >= 0 && pos->castle < CASTLE_SIZE);
-  key ^= CastleKeys[pos->castle];
+  ASSERT(board->castle >= 0 && board->castle < CASTLE_SIZE);
+  key ^= CastleKeys[board->castle];
   return key;
+}
+
+//// Process ////
+void resetBoard(Board* board)
+{
+  for (int i = 0; i < POSITION_SIZE; ++i)
+  {
+    board->pieceStates[i] = OB;
+  }
+
+  for (int i = 0; i < INDEX_SIZE; ++i)
+  {
+    board->pieceStates[IndexToPosition[i]] = EMPTY;
+  }
+
+  for (int i = 0; i < PLAYER_SIZE; ++i)
+  {
+    board->bigPieceCounts[i] = 0;
+    board->majorPieceCounts[i] = 0;
+    board->minorPieceCounts[i] = 0;
+    board->pawns[i] = 0ULL;
+  }
+
+  for (int i = 0; i < PIECE_SIZE; ++i)
+  {
+    board->counts[i] = 0;
+  }
+
+  board->kingSquares[WHITE] = XX;
+  board->kingSquares[BLACK] = XX;
+  board->side = BOTH;
+  board->castle = 0;
+  board->enPassant = XX;
+  board->fiftyMoves = 0;
+  board->currentPly = 0;
+  board->historyPly = 0;
+  board->positionKey = 0ULL;
 }
 
 //// Print ////

@@ -149,25 +149,25 @@ int popBit(u64* bb)
 }
 
 // Set bit
-void setBit(u64* bb, int sq)
+void setBit(u64* bb, int index)
 {
-  *bb |= SetMask[sq];
+  *bb |= SetMask[index];
 }
 
 // Clear bit
-void clearBit(u64* bb, int sq)
+void clearBit(u64* bb, int index)
 {
-  *bb &= ClearMask[sq];
+  *bb &= ClearMask[index];
 }
 
 // Count bit
-int countBit(u64 b)
+int countBit(u64 bit)
 {
   int count = 0;
-  while (b)
+  while (bit)
   {
     count++;
-    b &= b - 1;
+    bit &= bit - 1;
   }
   return count;
 }
@@ -177,9 +177,10 @@ u64 generatePositionKey(const Board* board)
 {
   u64 key = 0;
 
+  // Pieces
   for (int i = 0; i < POSITION_SIZE; ++i)
   {
-    int piece = board->pieceStates[i];
+    int piece = board->pieces[i];
     if (piece != XX && piece != EMPTY)
     {
       ASSERT(piece >= WHITE_PAWN && piece <= BLACK_KING);
@@ -187,20 +188,61 @@ u64 generatePositionKey(const Board* board)
     }
   }
 
+  // Side
   if (board->side == WHITE)
   {
     key ^= SideKey;
   }
 
+  // En passant
   if (board->enPassant == XX)
   {
     ASSERT(board->enPassant >= 0 && board->enPassant <= POSITION_SIZE);
     key ^= PieceKeys[EMPTY][board->enPassant];
   }
 
+  // Castle
   ASSERT(board->castle >= 0 && board->castle < CASTLE_SIZE);
   key ^= CastleKeys[board->castle];
+
   return key;
+}
+
+//// Process ////
+void resetBoard(Board* board)
+{
+  for (int i = 0; i < POSITION_SIZE; ++i)
+  {
+    board->pieces[i] = OB;
+  }
+
+  for (int i = 0; i < INDEX_SIZE; ++i)
+  {
+    board->pieces[IndexToPosition[i]] = EMPTY;
+  }
+
+  for (int i = 0; i < PLAYER_SIZE; ++i)
+  {
+    board->bigPieceCounts[i] = 0;
+    board->majorPieceCounts[i] = 0;
+    board->minorPieceCounts[i] = 0;
+    board->pawns[i] = 0ULL;
+  }
+
+  for (int i = 0; i < PIECE_SIZE; ++i)
+  {
+    board->counts[i] = 0;
+  }
+
+  board->kingSquares[WHITE] = XX;
+  board->kingSquares[BLACK] = XX;
+  board->side = BOTH;
+  board->castle = 0;
+  board->enPassant = XX;
+  board->fiftyMoves = 0;
+  board->currentPly = 0;
+  board->historyPly = 0;
+  board->positionKey = 0ULL;
 }
 
 //// Forsyth–Edwards Notation (FEN) ////
@@ -261,7 +303,7 @@ int parseFen(char* fen, Board* board)
       int position = IndexToPosition[index];
       if (piece != EMPTY)
       {
-        board->pieceStates[position] = piece;
+        board->pieces[position] = piece;
       }
       file++;
     }
@@ -307,43 +349,6 @@ int parseFen(char* fen, Board* board)
   // Finalize
   board->positionKey = generatePositionKey(board);
   return 0;
-}
-
-//// Process ////
-void resetBoard(Board* board)
-{
-  for (int i = 0; i < POSITION_SIZE; ++i)
-  {
-    board->pieceStates[i] = OB;
-  }
-
-  for (int i = 0; i < INDEX_SIZE; ++i)
-  {
-    board->pieceStates[IndexToPosition[i]] = EMPTY;
-  }
-
-  for (int i = 0; i < PLAYER_SIZE; ++i)
-  {
-    board->bigPieceCounts[i] = 0;
-    board->majorPieceCounts[i] = 0;
-    board->minorPieceCounts[i] = 0;
-    board->pawns[i] = 0ULL;
-  }
-
-  for (int i = 0; i < PIECE_SIZE; ++i)
-  {
-    board->counts[i] = 0;
-  }
-
-  board->kingSquares[WHITE] = XX;
-  board->kingSquares[BLACK] = XX;
-  board->side = BOTH;
-  board->castle = 0;
-  board->enPassant = XX;
-  board->fiftyMoves = 0;
-  board->currentPly = 0;
-  board->historyPly = 0;
-  board->positionKey = 0ULL;
 }
 
 //// Print ////

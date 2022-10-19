@@ -18,7 +18,7 @@ typedef unsigned long long u64;
 #define ASSERT(n)
 #else
 #define ASSERT(n)                    \
-  if (!n)                            \
+  if (!(n))                          \
   {                                  \
     printf("Assert: %s", #n);        \
     printf("on %s ", __DATE__);      \
@@ -142,7 +142,7 @@ typedef struct
 // Board struct
 typedef struct
 {
-  int pieceStates[POSITION_SIZE];    // Piece states of each position
+  int pieces[POSITION_SIZE];         // Piece states of each position
   u64 pawns[PLAYER_SIZE];            // Pawn positions in bit for each player
   int kingSquares[2];                // King positions for white and black players
   int side;                          // Current player side to move

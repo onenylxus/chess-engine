@@ -8,6 +8,7 @@
 #define POSITION_SIZE 120
 #define INDEX_SIZE 64
 #define MAX_MOVES 2048
+#define FEN_INIT "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 // Type definitions
 typedef unsigned long long u64;

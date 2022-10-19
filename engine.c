@@ -203,6 +203,112 @@ u64 generatePositionKey(const Board* board)
   return key;
 }
 
+//// Forsyth–Edwards Notation (FEN) ////
+int parseFen(char* fen, Board* board)
+{
+  ASSERT(fen != NULL);
+  ASSERT(board != NULL);
+
+  int rank = RANK_8;
+  int file = FILE_A;
+  int piece = 0;
+  int count = 0;
+
+  resetBoard(board);
+
+  // Piece states
+  while (rank >= RANK_1 && *fen)
+  {
+    count = 1;
+    switch (*fen)
+    {
+      // Pieces
+      case 'p': piece = BLACK_PAWN; break;
+      case 'r': piece = BLACK_ROOK; break;
+      case 'n': piece = BLACK_KNIGHT; break;
+      case 'b': piece = BLACK_BISHOP; break;
+      case 'q': piece = BLACK_QUEEN; break;
+      case 'k': piece = BLACK_KING; break;
+      case 'P': piece = WHITE_PAWN; break;
+      case 'R': piece = WHITE_ROOK; break;
+      case 'N': piece = WHITE_KNIGHT; break;
+      case 'B': piece = WHITE_BISHOP; break;
+      case 'Q': piece = WHITE_QUEEN; break;
+      case 'K': piece = WHITE_KING; break;
+
+      // Empties
+      case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8':
+        piece = EMPTY;
+        count = *fen - '0';
+        break;
+
+      // New rank
+      case '/': case ' ':
+        rank--;
+        file = FILE_A;
+        fen++;
+        continue;
+
+      // Default
+      default:
+        printf("FEN syntax error\n");
+        return -1;
+    }
+
+    for (int i = 0; i < count; ++i)
+    {
+      int index = rank * 8 + file;
+      int position = IndexToPosition[index];
+      if (piece != EMPTY)
+      {
+        board->pieceStates[position] = piece;
+      }
+      file++;
+    }
+    fen++;
+  }
+
+  // Side
+  ASSERT(*fen == 'w' || *fen == 'b');
+  board->side = *fen == 'w' ? WHITE : BLACK;
+  fen += 2;
+
+  // Castle
+  for (int i = 0; i < 4; ++i)
+  {
+    if (*fen == ' ')
+    {
+      break;
+    }
+
+    switch (*fen)
+    {
+      case 'K': board->castle |= CASTLE_WHITE_KING; break;
+      case 'Q': board->castle |= CASTLE_WHITE_QUEEN; break;
+      case 'k': board->castle |= CASTLE_BLACK_KING; break;
+      case 'q': board->castle |= CASTLE_BLACK_QUEEN; break;
+    }
+    fen++;
+  }
+  fen++;
+  ASSERT(board->castle >= 0 && board->castle < CASTLE_SIZE);
+
+  // En passant
+  if (*fen != '-')
+  {
+    file = fen[0] - 'a';
+    rank = fen[1] - '1';
+
+    ASSERT(file >= FILE_A && file <= FILE_H);
+    ASSERT(rank >= RANK_1 && rank <= RANK_8);
+    board->enPassant = getPosition(file, rank);
+  }
+
+  // Finalize
+  board->positionKey = generatePositionKey(board);
+  return 0;
+}
+
 //// Process ////
 void resetBoard(Board* board)
 {

@@ -32,6 +32,12 @@ u64 PieceKeys[PIECE_SIZE][POSITION_SIZE];
 u64 SideKey;
 u64 CastleKeys[CASTLE_SIZE];
 
+// Characters
+const char PieceCharacters[] = ".PNBRQKpnbrqk";
+const char SideCharacters[] = "wb-";
+const char RankCharacters[] = "12345678";
+const char FileCharacters[] = "abcdefgh";
+
 //// Getters ////
 
 // Get position from file and rank
@@ -407,6 +413,43 @@ void PrintBitboard(u64 key)
   }
 }
 
+// Print board
+void PrintBoard(const Board* board)
+{
+  printf("Game board:\n\n");
+
+  // Board
+  for (int rank = RANK_8; rank >= RANK_1; --rank)
+  {
+    printf("%c ", RankCharacters[rank]);
+    for (int file = FILE_A; file <= FILE_H; ++file)
+    {
+      int index = rank * 8 + file;
+      int position = IndexToPosition[index];
+      int piece = board->pieces[position];
+      printf("%3c", PieceCharacters[piece]);
+    }
+    printf("\n");
+  }
+  printf("\n  ");
+  for (int file = FILE_A; file <= FILE_H; ++file)
+  {
+    printf("%3c", FileCharacters[file]);
+  }
+  printf("\n\n");
+
+  // Statistics
+  char castleWhiteKing = board->castle & CASTLE_WHITE_KING ? 'K' : '-';
+  char castleWhiteQueen = board->castle & CASTLE_WHITE_QUEEN ? 'Q' : '-';
+  char castleBlackKing = board->castle & CASTLE_BLACK_KING ? 'k' : '-';
+  char castleBlackQueen = board->castle & CASTLE_BLACK_QUEEN ? 'q' : '-';
+
+  printf("Side: %c\n", SideCharacters[board->side]);
+  printf("En passant: %d\n", board->enPassant);
+  printf("Castle: %c%c%c%c\n", castleWhiteKing, castleWhiteQueen, castleBlackKing, castleBlackQueen);
+  printf("Position key: %llX\n", board->positionKey);
+}
+
 //// Main ////
 
 // Main function
@@ -416,19 +459,29 @@ int main(int argc, char* argv[])
   Init();
 
   // Print boards
-  printf("\n\n");
-  PrintPositionBoard();
-  printf("\n\n");
-  PrintIndexBoard();
-  printf("\n\n");
+  #ifdef TEST
+    printf("\n\n");
+    PrintPositionBoard();
+    printf("\n\n");
+    PrintIndexBoard();
+    printf("\n\n");
+  #endif
 
   // Testing with bitboard
-  for (int i = 0; i < INDEX_SIZE; ++i)
-  {
-    printf("Index %d:\n", i);
-    PrintBitboard(SetMask[i]);
-    printf("\n");
-  }
+  #ifdef TEST
+    for (int i = 0; i < INDEX_SIZE; ++i)
+    {
+      printf("Index %d:\n", i);
+      PrintBitboard(SetMask[i]);
+      printf("\n");
+    }
+  #endif
+
+  // Print game board
+  Board board[1];
+  ResetBoard(board);
+  ParseFen(FEN_INIT, board);
+  PrintBoard(board);
 
   // Return
   return 0;

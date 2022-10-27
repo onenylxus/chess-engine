@@ -35,7 +35,7 @@ u64 CastleKeys[CASTLE_SIZE];
 //// Getters ////
 
 // Get position from file and rank
-int getPosition(int file, int rank)
+int GetPosition(int file, int rank)
 {
   return rank * 10 + file + 21;
 }
@@ -43,7 +43,7 @@ int getPosition(int file, int rank)
 //// Init ////
 
 // Initialize board conversion
-void initBoardConversion()
+void InitBoardConversion()
 {
   // One extra file and two extra ranks are added to each respective side
   // Hence for this chess engine the board is 12x10
@@ -94,7 +94,7 @@ void initBoardConversion()
   {
     for (int file = FILE_A; file <= FILE_H; ++file)
     {
-      position = getPosition(file, rank);
+      position = GetPosition(file, rank);
       IndexToPosition[index] = position;
       PositionToIndex[position] = index;
       index++;
@@ -103,7 +103,7 @@ void initBoardConversion()
 }
 
 // Initalize bit masks
-void initBitMask()
+void InitBitMask()
 {
   for (int i = 0; i < INDEX_SIZE; ++i)
   {
@@ -113,7 +113,7 @@ void initBitMask()
 }
 
 // Initalize hash keys
-void initHashKeys()
+void InitHashKeys()
 {
   for (int i = 0; i < PIECE_SIZE; ++i)
   {
@@ -130,17 +130,17 @@ void initHashKeys()
 }
 
 // Init function
-void init()
+void Init()
 {
-  initBoardConversion();
-  initBitMask();
-  initHashKeys();
+  InitBoardConversion();
+  InitBitMask();
+  InitHashKeys();
 }
 
 //// Bitboard ////
 
 // Pop bit
-int popBit(u64* bb)
+int PopBit(u64* bb)
 {
   u64 b = *bb ^ (*bb - 1);
   unsigned int fold = (unsigned int)((b & 0xffffffff) ^ (b >> 32));
@@ -149,19 +149,19 @@ int popBit(u64* bb)
 }
 
 // Set bit
-void setBit(u64* bb, int index)
+void SetBit(u64* bb, int index)
 {
   *bb |= SetMask[index];
 }
 
 // Clear bit
-void clearBit(u64* bb, int index)
+void ClearBit(u64* bb, int index)
 {
   *bb &= ClearMask[index];
 }
 
 // Count bit
-int countBit(u64 bit)
+int CountBit(u64 bit)
 {
   int count = 0;
   while (bit)
@@ -173,7 +173,7 @@ int countBit(u64 bit)
 }
 
 //// Hash ////
-u64 generatePositionKey(const Board* board)
+u64 GeneratePositionKey(const Board* board)
 {
   u64 key = 0;
 
@@ -181,7 +181,7 @@ u64 generatePositionKey(const Board* board)
   for (int i = 0; i < POSITION_SIZE; ++i)
   {
     int piece = board->pieces[i];
-    if (piece != XX && piece != EMPTY)
+    if (piece != XX && piece != OB && piece != EMPTY)
     {
       ASSERT(piece >= WHITE_PAWN && piece <= BLACK_KING);
       key ^= PieceKeys[piece][i];
@@ -209,7 +209,7 @@ u64 generatePositionKey(const Board* board)
 }
 
 //// Process ////
-void resetBoard(Board* board)
+void ResetBoard(Board* board)
 {
   for (int i = 0; i < POSITION_SIZE; ++i)
   {
@@ -246,7 +246,7 @@ void resetBoard(Board* board)
 }
 
 //// Forsyth–Edwards Notation (FEN) ////
-int parseFen(char* fen, Board* board)
+int ParseFen(char* fen, Board* board)
 {
   ASSERT(fen != NULL);
   ASSERT(board != NULL);
@@ -256,7 +256,7 @@ int parseFen(char* fen, Board* board)
   int piece = 0;
   int count = 0;
 
-  resetBoard(board);
+  ResetBoard(board);
 
   // Piece states
   while (rank >= RANK_1 && *fen)
@@ -343,18 +343,18 @@ int parseFen(char* fen, Board* board)
 
     ASSERT(file >= FILE_A && file <= FILE_H);
     ASSERT(rank >= RANK_1 && rank <= RANK_8);
-    board->enPassant = getPosition(file, rank);
+    board->enPassant = GetPosition(file, rank);
   }
 
   // Finalize
-  board->positionKey = generatePositionKey(board);
+  board->positionKey = GeneratePositionKey(board);
   return 0;
 }
 
 //// Print ////
 
 // Print position board
-void printPositionBoard()
+void PrintPositionBoard()
 {
   printf("Position board:\n");
   for (int i = 0; i < POSITION_SIZE; ++i)
@@ -368,7 +368,7 @@ void printPositionBoard()
 }
 
 // Print index board
-void printIndexBoard()
+void PrintIndexBoard()
 {
   printf("Index board:\n");
   for (int j = 0; j < INDEX_SIZE; ++j)
@@ -382,7 +382,7 @@ void printIndexBoard()
 }
 
 // Print bitboard
-void printBitboard(u64 key)
+void PrintBitboard(u64 key)
 {
   int position = 0;
   int index = 0;
@@ -392,7 +392,7 @@ void printBitboard(u64 key)
   {
     for (int file = FILE_A; file <= FILE_H; ++file)
     {
-      position = getPosition(file, rank);
+      position = GetPosition(file, rank);
       index = PositionToIndex[position];
       if (key & (1ULL << index))
       {
@@ -413,20 +413,20 @@ void printBitboard(u64 key)
 int main(int argc, char* argv[])
 {
   // Initialize engine
-  init();
+  Init();
 
   // Print boards
   printf("\n\n");
-  printPositionBoard();
+  PrintPositionBoard();
   printf("\n\n");
-  printIndexBoard();
+  PrintIndexBoard();
   printf("\n\n");
 
   // Testing with bitboard
   for (int i = 0; i < INDEX_SIZE; ++i)
   {
     printf("Index %d:\n", i);
-    printBitboard(SetMask[i]);
+    PrintBitboard(SetMask[i]);
     printf("\n");
   }
 

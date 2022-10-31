@@ -38,6 +38,13 @@ const char SideCharacters[] = "wb-";
 const char RankCharacters[] = "12345678";
 const char FileCharacters[] = "abcdefgh";
 
+// Pieces
+const int BigPieces[PIECE_SIZE] = { FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE };
+const int MajorPieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE };
+const int MinorPieces[PIECE_SIZE] = { FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE };
+const int PieceValues[PIECE_SIZE] = { 0, 100, 325, 325, 550, 1000, 50000, 100, 325, 325, 550, 1000, 50000 };
+const int PieceColors[PIECE_SIZE] = { FALSE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK };
+
 //// Getters ////
 
 // Get position from file and rank
@@ -227,12 +234,12 @@ void ResetBoard(Board* board)
     board->pieces[IndexToPosition[i]] = EMPTY;
   }
 
-  for (int i = 0; i < PLAYER_SIZE; ++i)
+  for (int i = 0; i < 2; ++i)
   {
-    board->bigPieceCounts[i] = 0;
-    board->majorPieceCounts[i] = 0;
-    board->minorPieceCounts[i] = 0;
     board->pawns[i] = 0ULL;
+    board->bigPieces[i] = 0;
+    board->majorPieces[i] = 0;
+    board->minorPieces[i] = 0;
   }
 
   for (int i = 0; i < PIECE_SIZE; ++i)
@@ -355,6 +362,47 @@ int ParseFen(char* fen, Board* board)
   // Finalize
   board->positionKey = GeneratePositionKey(board);
   return 0;
+}
+
+//// Material ////
+void UpdateMaterial(Board* board)
+{
+  for (int i = 0; i < POSITION_SIZE; ++i)
+  {
+    int piece = board->pieces[i];
+    if (piece != OB && piece != EMPTY)
+    {
+      int color = PieceColors[piece];
+
+      // Piece type
+      if (BigPieces[piece])
+      {
+        board->bigPieces[color]++;
+      }
+      if (MajorPieces[piece])
+      {
+        board->majorPieces[color]++;
+      }
+      if (MinorPieces[piece])
+      {
+        board->minorPieces[color]++;
+      }
+
+      // Material and count
+      board->materials[color] += PieceValues[piece];
+      board->pieceList[piece][board->counts[piece]++] = i;
+
+      // Kings
+      if (piece == WHITE_KING)
+      {
+        board->kingSquares[WHITE] = i;
+      }
+      if (piece == BLACK_KING)
+      {
+        board->kingSquares[BLACK] = i;
+      }
+    }
+  }
 }
 
 //// Print ////

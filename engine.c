@@ -6,6 +6,8 @@
 
 // Conversion arrays
 int PositionToIndex[POSITION_SIZE];
+int PositionToRank[POSITION_SIZE];
+int PositionToFile[POSITION_SIZE];
 int IndexToPosition[INDEX_SIZE];
 
 // Magic bitboard
@@ -96,6 +98,8 @@ void InitBoardConversion()
   for (int i = 0; i < POSITION_SIZE; ++i)
   {
     PositionToIndex[i] = INDEX_SIZE;
+    PositionToRank[i] = RANK_X;
+    PositionToFile[i] = FILE_X;
   }
   for (int j = 0; j < INDEX_SIZE; ++j)
   {
@@ -108,8 +112,10 @@ void InitBoardConversion()
     for (int file = FILE_A; file <= FILE_H; ++file)
     {
       position = GetPosition(file, rank);
-      IndexToPosition[index] = position;
       PositionToIndex[position] = index;
+      PositionToRank[position] = rank;
+      PositionToFile[position] = file;
+      IndexToPosition[index] = position;
       index++;
     }
   }
@@ -505,25 +511,6 @@ int main(int argc, char* argv[])
 {
   // Initialize engine
   Init();
-
-  // Print boards
-  #ifdef TEST
-    printf("\n\n");
-    PrintPositionBoard();
-    printf("\n\n");
-    PrintIndexBoard();
-    printf("\n\n");
-  #endif
-
-  // Testing with bitboard
-  #ifdef TEST
-    for (int i = 0; i < INDEX_SIZE; ++i)
-    {
-      printf("Index %d:\n", i);
-      PrintBitboard(SetMask[i]);
-      printf("\n");
-    }
-  #endif
 
   // Print game board
   Board board[1];

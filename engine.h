@@ -5,6 +5,7 @@
 // Constants
 #define DEBUG
 #define NAME "Chess Engine"
+#define PLAYERS 2
 #define POSITION_SIZE 120
 #define INDEX_SIZE 64
 #define MAX_MOVES 2048
@@ -17,15 +18,15 @@ typedef unsigned long long u64;
 #ifndef DEBUG
 #define ASSERT(n)
 #else
-#define ASSERT(n)                    \
-  if (!(n))                          \
-  {                                  \
-    printf("Assert: %s", #n);        \
-    printf("on %s ", __DATE__);      \
-    printf("at %s ", __TIME__);      \
-    printf("in file %s", __FILE__);  \
-    printf("at line %s ", __LINE__); \
-    exit(1);                         \
+#define ASSERT(n)                     \
+  if (!(n))                           \
+  {                                   \
+    printf("Assert: %s ", #n);        \
+    printf("on %s ", __DATE__);       \
+    printf("at %s ", __TIME__);       \
+    printf("in file %s ", __FILE__);  \
+    printf("at line %d\n", __LINE__); \
+    exit(1);                          \
   }
 #endif
 
@@ -142,8 +143,8 @@ typedef struct
 typedef struct
 {
   int pieces[POSITION_SIZE];     // Piece states of each position
-  u64 pawns[2];                  // Pawn positions in bit for each player
-  int kingSquares[2];            // King positions for each player
+  u64 pawns[PLAYERS + 1];        // Pawn positions in bit for each player
+  int kingSquares[PLAYERS];      // King positions for each player
   int side;                      // Current player side to move
   int castle;                    // Castle permutation
   int enPassant;                 // En passant position
@@ -152,10 +153,10 @@ typedef struct
   int historyPly;                // History ply
   u64 positionKey;               // Unique key for position
   int counts[PIECE_SIZE];        // Total number of pieces on the board
-  int bigPieces[2];              // Number of big pieces (not pawns) on the board for each player
-  int majorPieces[2];            // Number of major pieces (rooks and queens) on the board for each player
-  int minorPieces[2];            // Number of minor pieces (knights and bishops) on the board for each player
-  int materials[2];              // Materials for each player
+  int bigPieces[PLAYERS];        // Number of big pieces (not pawns) on the board for each player
+  int majorPieces[PLAYERS];      // Number of major pieces (rooks and queens) on the board for each player
+  int minorPieces[PLAYERS];      // Number of minor pieces (knights and bishops) on the board for each player
+  int materials[PLAYERS];        // Materials for each player
   int pieceList[PIECE_SIZE][10]; // Position of each piece sorted by piece type
   UndoMove history[MAX_MOVES];   // Move history
 } Board;

@@ -240,7 +240,7 @@ void ResetBoard(Board* board)
     board->pieces[IndexToPosition[i]] = EMPTY;
   }
 
-  for (int i = 0; i < 2; ++i)
+  for (int i = 0; i < PLAYERS; ++i)
   {
     board->pawns[i] = 0ULL;
     board->bigPieces[i] = 0;
@@ -262,6 +262,167 @@ void ResetBoard(Board* board)
   board->currentPly = 0;
   board->historyPly = 0;
   board->positionKey = 0ULL;
+}
+
+int CheckBoard(const Board* board)
+{
+  int counts[PIECE_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  int bigPieces[PLAYERS] = { 0, 0 };
+  int majorPieces[PLAYERS] = { 0, 0 };
+  int minorPieces[PLAYERS] = { 0, 0 };
+  int materials[PLAYERS] = { 0, 0 };
+
+  u64 pawns[PLAYERS + 1] = { 0ULL, 0ULL, 0ULL };
+  pawns[WHITE] = board->pawns[WHITE];
+  pawns[BLACK] = board->pawns[BLACK];
+  pawns[BOTH] = board->pawns[BOTH];
+
+  // Check piece positions
+  for (int i = WHITE_PAWN; i <= BLACK_KING; ++i)
+  {
+    for (int j = 0; j < board->counts[i]; ++j)
+    {
+      int position = board->pieceList[i][j];
+      ASSERT(board->pieces[position] == i);
+    }
+  }
+
+  // Update temporary counters
+  for (int i = 0; i < INDEX_SIZE; ++i)
+  {
+    int position = IndexToPosition[i];
+    int piece = board->pieces[position];
+    int color = PieceColors[piece];
+
+    counts[piece]++;
+    if (BigPieces[piece] == TRUE)
+    {
+      bigPieces[color]++;
+    }
+    if (MajorPieces[piece] == TRUE)
+    {
+      majorPieces[color]++;
+    }
+    if (MinorPieces[piece] == TRUE)
+    {
+      minorPieces[color]++;
+    }
+    materials[color] += PieceValues[piece];
+  }
+
+  // Check piece counts
+  for (int i = WHITE_PAWN; i < BLACK_KING; ++i)
+  {
+    ASSERT(counts[i] == board->counts[i]);
+  }
+
+  // Check bitboards
+  int bits = 0;
+  bits = CountBit(pawns[WHITE]);
+  ASSERT(bits == board->counts[WHITE_PAWN]);
+  bits = CountBit(pawns[BLACK]);
+  ASSERT(bits == board->counts[BLACK_PAWN]);
+  bits = CountBit(pawns[BOTH]);
+  ASSERT(bits == board->counts[WHITE_PAWN] + board->counts[BLACK_PAWN]);
+
+  int index = 0;
+  int piece = EMPTY;
+  while (pawns[WHITE])
+  {
+    index = PopBit(&pawns[WHITE]);
+    piece = board->pieces[IndexToPosition[index]];
+    ASSERT(piece == WHITE_PAWN);
+  }
+  while (pawns[BLACK])
+  {
+    index = PopBit(&pawns[BLACK]);
+    piece = board->pieces[IndexToPosition[index]];
+    ASSERT(piece == BLACK_PAWN);
+  }
+  while (pawns[BOTH])
+  {
+    index = PopBit(&pawns[BOTH]);
+    piece = board->pieces[IndexToPosition[index]];
+    ASSERT(piece == WHITE_PAWN || piece == BLACK_PAWN);
+  }
+
+  // Check materials
+  ASSERT(bigPieces[WHITE] == board->bigPieces[WHITE]);
+  ASSERT(bigPieces[BLACK] == board->bigPieces[BLACK]);
+  ASSERT(majorPieces[WHITE] == board->majorPieces[WHITE]);
+  ASSERT(majorPieces[BLACK] == board->majorPieces[BLACK]);
+  ASSERT(minorPieces[WHITE] == board->minorPieces[WHITE]);
+  ASSERT(minorPieces[BLACK] == board->minorPieces[BLACK]);
+  ASSERT(materials[WHITE] == board->materials[WHITE]);
+  ASSERT(materials[BLACK] == board->materials[BLACK]);
+
+  // Check general information
+  ASSERT(board->side == WHITE || board->side == BLACK);
+  ASSERT(GeneratePositionKey(board) == board->positionKey);
+
+  int isWhiteEnPassant = board->side == WHITE && PositionToRank[board->enPassant] == RANK_6;
+  int isBlackEnPassant = board->side == BLACK && PositionToRank[board->enPassant] == RANK_3;
+  ASSERT(board->enPassant == XX || isWhiteEnPassant || isBlackEnPassant);
+
+  ASSERT(board->pieces[board->kingSquares[WHITE]] == WHITE_KING);
+  ASSERT(board->pieces[board->kingSquares[BLACK]] == BLACK_KING);
+
+  // Return
+  return TRUE;
+}
+
+//// Material ////
+void UpdateMaterial(Board *board)
+{
+  for (int i = 0; i < POSITION_SIZE; ++i)
+  {
+    int piece = board->pieces[i];
+    if (piece != OB && piece != EMPTY)
+    {
+      int color = PieceColors[piece];
+
+      // Piece type
+      if (BigPieces[piece])
+      {
+        board->bigPieces[color]++;
+      }
+      if (MajorPieces[piece])
+      {
+        board->majorPieces[color]++;
+      }
+      if (MinorPieces[piece])
+      {
+        board->minorPieces[color]++;
+      }
+
+      // Material and count
+      board->materials[color] += PieceValues[piece];
+      board->pieceList[piece][board->counts[piece]] = i;
+      board->counts[piece]++;
+
+      // Kings
+      if (piece == WHITE_KING)
+      {
+        board->kingSquares[WHITE] = i;
+      }
+      if (piece == BLACK_KING)
+      {
+        board->kingSquares[BLACK] = i;
+      }
+
+      // Pawns
+      if (piece == WHITE_PAWN)
+      {
+        SetBit(&board->pawns[WHITE], PositionToIndex[i]);
+        SetBit(&board->pawns[BOTH], PositionToIndex[i]);
+      }
+      if (piece == BLACK_PAWN)
+      {
+        SetBit(&board->pawns[BLACK], PositionToIndex[i]);
+        SetBit(&board->pawns[BOTH], PositionToIndex[i]);
+      }
+    }
+  }
 }
 
 //// Forsyth–Edwards Notation (FEN) ////
@@ -367,48 +528,8 @@ int ParseFen(char* fen, Board* board)
 
   // Finalize
   board->positionKey = GeneratePositionKey(board);
+  UpdateMaterial(board);
   return 0;
-}
-
-//// Material ////
-void UpdateMaterial(Board* board)
-{
-  for (int i = 0; i < POSITION_SIZE; ++i)
-  {
-    int piece = board->pieces[i];
-    if (piece != OB && piece != EMPTY)
-    {
-      int color = PieceColors[piece];
-
-      // Piece type
-      if (BigPieces[piece])
-      {
-        board->bigPieces[color]++;
-      }
-      if (MajorPieces[piece])
-      {
-        board->majorPieces[color]++;
-      }
-      if (MinorPieces[piece])
-      {
-        board->minorPieces[color]++;
-      }
-
-      // Material and count
-      board->materials[color] += PieceValues[piece];
-      board->pieceList[piece][board->counts[piece]++] = i;
-
-      // Kings
-      if (piece == WHITE_KING)
-      {
-        board->kingSquares[WHITE] = i;
-      }
-      if (piece == BLACK_KING)
-      {
-        board->kingSquares[BLACK] = i;
-      }
-    }
-  }
 }
 
 //// Print ////
@@ -505,6 +626,7 @@ void PrintBoard(const Board* board)
 }
 
 //// Main ////
+#define FEN_TEST "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
 
 // Main function
 int main(int argc, char* argv[])
@@ -514,9 +636,9 @@ int main(int argc, char* argv[])
 
   // Print game board
   Board board[1];
-  ResetBoard(board);
-  ParseFen(FEN_INIT, board);
+  ParseFen(FEN_TEST, board);
   PrintBoard(board);
+  ASSERT(CheckBoard(board));
 
   // Return
   return 0;

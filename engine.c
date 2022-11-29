@@ -240,7 +240,7 @@ void ResetBoard(Board* board)
     board->pieces[IndexToPosition[i]] = EMPTY;
   }
 
-  for (int i = 0; i < PLAYERS; ++i)
+  for (int i = 0; i < SIDE_SIZE; ++i)
   {
     board->pawns[i] = 0ULL;
     board->bigPieces[i] = 0;
@@ -267,12 +267,12 @@ void ResetBoard(Board* board)
 int CheckBoard(const Board* board)
 {
   int counts[PIECE_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-  int bigPieces[PLAYERS] = { 0, 0 };
-  int majorPieces[PLAYERS] = { 0, 0 };
-  int minorPieces[PLAYERS] = { 0, 0 };
-  int materials[PLAYERS] = { 0, 0 };
+  int bigPieces[SIDE_SIZE] = { 0, 0 };
+  int majorPieces[SIDE_SIZE] = { 0, 0 };
+  int minorPieces[SIDE_SIZE] = { 0, 0 };
+  int materials[SIDE_SIZE] = { 0, 0 };
 
-  u64 pawns[PLAYERS + 1] = { 0ULL, 0ULL, 0ULL };
+  u64 pawns[PLAYER_SIZE] = { 0ULL, 0ULL, 0ULL };
   pawns[WHITE] = board->pawns[WHITE];
   pawns[BLACK] = board->pawns[BLACK];
   pawns[BOTH] = board->pawns[BOTH];

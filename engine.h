@@ -44,13 +44,14 @@ typedef unsigned long long u64;
 #endif
 
 // Boolean
-enum {
+enum Boolean
+{
   FALSE,
   TRUE
 };
 
 // Players
-enum
+enum Player
 {
   WHITE,
   BLACK,
@@ -60,7 +61,7 @@ enum
 };
 
 // Pieces
-enum
+enum Piece
 {
   EMPTY,
   WHITE_PAWN,
@@ -79,7 +80,7 @@ enum
 };
 
 // Files
-enum
+enum File
 {
   FILE_A,
   FILE_B,
@@ -93,7 +94,7 @@ enum
 };
 
 // Ranks
-enum
+enum Rank
 {
   RANK_1,
   RANK_2,
@@ -107,7 +108,7 @@ enum
 };
 
 // Positions
-enum
+enum Position
 {
   A1 = 21, B1, C1, D1, E1, F1, G1, H1,
   A2 = 31, B2, C2, D2, E2, F2, G2, H2,
@@ -121,7 +122,7 @@ enum
 };
 
 // Castling
-enum
+enum Castling
 {
   CASTLE_WHITE_KING = 1,
   CASTLE_WHITE_QUEEN = 2,
@@ -145,7 +146,7 @@ typedef struct
 {
   int pieces[POSITION_SIZE];            // Piece states of each position
   u64 pawns[PLAYER_SIZE];               // Pawn positions in bit for each player
-  int kingSquares[SIDE_SIZE]; // King positions for each player
+  int kingSquares[SIDE_SIZE];           // King positions for each player
   int side;                             // Current player side to move
   int castle;                           // Castle permutation
   int enPassant;                        // En passant position
@@ -154,10 +155,10 @@ typedef struct
   int historyPly;                       // History ply
   u64 positionKey;                      // Unique key for position
   int counts[PIECE_SIZE];               // Total number of pieces on the board
-  int bigPieces[SIDE_SIZE];   // Number of big pieces (not pawns) on the board for each player
-  int majorPieces[SIDE_SIZE]; // Number of major pieces (rooks and queens) on the board for each player
-  int minorPieces[SIDE_SIZE]; // Number of minor pieces (knights and bishops) on the board for each player
-  int materials[SIDE_SIZE];   // Materials for each player
+  int bigPieces[SIDE_SIZE];             // Number of big pieces (not pawns) on the board for each player
+  int majorPieces[SIDE_SIZE];           // Number of major pieces (rooks and queens) on the board for each player
+  int minorPieces[SIDE_SIZE];           // Number of minor pieces (knights and bishops) on the board for each player
+  int materials[SIDE_SIZE];             // Materials for each player
   int pieceList[PIECE_SIZE][10];        // Position of each piece sorted by piece type
   UndoMove history[MAX_MOVES];          // Move history
 } Board;

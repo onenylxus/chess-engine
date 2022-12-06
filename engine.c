@@ -47,6 +47,17 @@ const int MinorPieces[PIECE_SIZE] = { FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FA
 const int PieceValues[PIECE_SIZE] = { 0, 100, 325, 325, 550, 1000, 50000, 100, 325, 325, 550, 1000, 50000 };
 const int PieceColors[PIECE_SIZE] = { FALSE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK };
 
+// Attack directions
+const int KnightAttackDirection[8] = { -21, -19, -12, -8, 8, 12, 19, 21 };
+const int BishopAttackDirection[4] = { -11, -9, 9, 11 };
+const int RookAttackDirection[4] = { -10, -1, 1, 10 };
+const int KingAttackDirection[8] = { -11, -10, -9, -1, 1, 9, 10, 11 };
+
+const int KnightPieces[PIECE_SIZE] = { FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE };
+const int BishopOrQueenPieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE };
+const int RookOrQueenPieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE };
+const int KingPieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE };
+
 //// Getters ////
 
 // Get position from file and rank
@@ -532,6 +543,96 @@ int ParseFen(char* fen, Board* board)
   return 0;
 }
 
+//// Attack ////
+int IsPositionAttacked(const int position, const int side, const Board* board)
+{
+  int piece = EMPTY;
+  int direction = 0;
+  int temp = position;
+
+  // Pawns
+  if (side == WHITE)
+  {
+    if (board->pieces[position - 11] == WHITE_PAWN || board->pieces[position - 9] == WHITE_PAWN)
+    {
+      return TRUE;
+    }
+  }
+  else
+  {
+    if (board->pieces[position + 9] == BLACK_PAWN || board->pieces[position + 11] == BLACK_PAWN)
+    {
+      return TRUE;
+    }
+  }
+
+  // Knights
+  for (int i = 0; i < 8; ++i)
+  {
+    piece = board->pieces[position + KnightAttackDirection[i]];
+    if (KnightPieces[piece] && PieceColors[piece] == side)
+    {
+      return TRUE;
+    }
+  }
+
+  // Bishops or queens
+  for (int i = 0; i < 4; ++i)
+  {
+    direction = BishopAttackDirection[i];
+    temp = position + direction;
+    piece = board->pieces[temp];
+
+    while (piece != OB)
+    {
+      if (piece != EMPTY)
+      {
+        if (BishopOrQueenPieces[piece] && PieceColors[piece] == side)
+        {
+          return TRUE;
+        }
+        break;
+      }
+      temp += direction;
+      piece = board->pieces[temp];
+    }
+  }
+
+  // Rooks or queens
+  for (int i = 0; i < 4; ++i)
+  {
+    direction = RookAttackDirection[i];
+    temp = position + direction;
+    piece = board->pieces[temp];
+
+    while (piece != OB)
+    {
+      if (piece != EMPTY)
+      {
+        if (RookOrQueenPieces[piece] && PieceColors[piece] == side)
+        {
+          return TRUE;
+        }
+        break;
+      }
+      temp += direction;
+      piece = board->pieces[temp];
+    }
+  }
+
+  // Kings
+  for (int i = 0; i < 8; ++i)
+  {
+    piece = board->pieces[position + KingAttackDirection[i]];
+    if (KingPieces[piece] && PieceColors[piece] == side)
+    {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 //// Print ////
 
 // Print position board
@@ -588,6 +689,30 @@ void PrintBitboard(u64 key)
   }
 }
 
+// Print attack board
+void PrintAttackBoard(const int side, const Board* board)
+{
+  int position = 0;
+
+  printf("Attack board:\n");
+  for (int rank = RANK_8; rank >= RANK_1; --rank)
+  {
+    for (int file = FILE_A; file <= FILE_H; ++file)
+    {
+      position = GetPosition(file, rank);
+      if (IsPositionAttacked(position, side, board))
+      {
+        printf(" X ");
+      }
+      else
+      {
+        printf(" - ");
+      }
+    }
+    printf("\n");
+  }
+}
+
 // Print board
 void PrintBoard(const Board* board)
 {
@@ -626,7 +751,6 @@ void PrintBoard(const Board* board)
 }
 
 //// Main ////
-#define FEN_TEST "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
 
 // Main function
 int main(int argc, char* argv[])
@@ -636,7 +760,6 @@ int main(int argc, char* argv[])
 
   // Print game board
   Board board[1];
-  ParseFen(FEN_TEST, board);
   PrintBoard(board);
   ASSERT(CheckBoard(board));
 

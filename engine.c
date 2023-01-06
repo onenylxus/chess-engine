@@ -11,8 +11,6 @@ int PositionToFile[POSITION_SIZE];
 int IndexToPosition[INDEX_SIZE];
 
 // Magic bitboard
-// This bitboard provides block and move information simultaneously
-// Hence provides faster lookup for piece movement
 const int MagicBitboard[INDEX_SIZE] =
 {
   63, 30,  3, 32, 25, 41, 22, 33,
@@ -61,9 +59,21 @@ const int KingPieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, T
 //// Getters ////
 
 // Get position from file and rank
-int GetPosition(int file, int rank)
+int GetPositionFromFileRank(int file, int rank)
 {
   return rank * 10 + file + 21;
+}
+
+// Get position from index
+int GetPositionFromIndex(int index)
+{
+  return IndexToPosition[index];
+}
+
+// Get index from position
+int GetIndexFromPosition(int position)
+{
+  return PositionToIndex[position];
 }
 
 //// Init ////
@@ -92,7 +102,7 @@ void InitBoardConversion()
   {
     for (int file = FILE_A; file <= FILE_H; ++file)
     {
-      position = GetPosition(file, rank);
+      position = GetPositionFromFileRank(file, rank);
       PositionToIndex[position] = index;
       PositionToRank[position] = rank;
       PositionToFile[position] = file;
@@ -218,7 +228,7 @@ void ResetBoard(Board* board)
 
   for (int i = 0; i < INDEX_SIZE; ++i)
   {
-    board->pieces[IndexToPosition[i]] = EMPTY;
+    board->pieces[GetPositionFromIndex(i)] = EMPTY;
   }
 
   for (int i = 0; i < SIDE_SIZE; ++i)
@@ -271,7 +281,7 @@ int CheckBoard(const Board* board)
   // Update temporary counters
   for (int i = 0; i < INDEX_SIZE; ++i)
   {
-    int position = IndexToPosition[i];
+    int position = GetPositionFromIndex(i);
     int piece = board->pieces[position];
     int color = PieceColors[piece];
 
@@ -311,19 +321,19 @@ int CheckBoard(const Board* board)
   while (pawns[WHITE])
   {
     index = PopBit(&pawns[WHITE]);
-    piece = board->pieces[IndexToPosition[index]];
+    piece = board->pieces[GetPositionFromIndex(index)];
     ASSERT(piece == WHITE_PAWN);
   }
   while (pawns[BLACK])
   {
     index = PopBit(&pawns[BLACK]);
-    piece = board->pieces[IndexToPosition[index]];
+    piece = board->pieces[GetPositionFromIndex(index)];
     ASSERT(piece == BLACK_PAWN);
   }
   while (pawns[BOTH])
   {
     index = PopBit(&pawns[BOTH]);
-    piece = board->pieces[IndexToPosition[index]];
+    piece = board->pieces[GetPositionFromIndex(index)];
     ASSERT(piece == WHITE_PAWN || piece == BLACK_PAWN);
   }
 
@@ -394,13 +404,13 @@ void UpdateMaterial(Board *board)
       // Pawns
       if (piece == WHITE_PAWN)
       {
-        SetBit(&board->pawns[WHITE], PositionToIndex[i]);
-        SetBit(&board->pawns[BOTH], PositionToIndex[i]);
+        SetBit(&board->pawns[WHITE], GetIndexFromPosition(i));
+        SetBit(&board->pawns[BOTH], GetIndexFromPosition(i));
       }
       if (piece == BLACK_PAWN)
       {
-        SetBit(&board->pawns[BLACK], PositionToIndex[i]);
-        SetBit(&board->pawns[BOTH], PositionToIndex[i]);
+        SetBit(&board->pawns[BLACK], GetIndexFromPosition(i));
+        SetBit(&board->pawns[BOTH], GetIndexFromPosition(i));
       }
     }
   }
@@ -461,7 +471,7 @@ int ParseFen(char* fen, Board* board)
     for (int i = 0; i < count; ++i)
     {
       int index = rank * 8 + file;
-      int position = IndexToPosition[index];
+      int position = GetPositionFromIndex(index);
       if (piece != EMPTY)
       {
         board->pieces[position] = piece;
@@ -504,7 +514,7 @@ int ParseFen(char* fen, Board* board)
 
     ASSERT(file >= FILE_A && file <= FILE_H);
     ASSERT(rank >= RANK_1 && rank <= RANK_8);
-    board->enPassant = GetPosition(file, rank);
+    board->enPassant = GetPositionFromFileRank(file, rank);
   }
 
   // Finalize
@@ -615,7 +625,7 @@ void PrintPositionBoard()
     {
       printf("\n");
     }
-    printf("%5d", PositionToIndex[i]);
+    printf("%5d", GetIndexFromPosition(i));
   }
 }
 
@@ -623,13 +633,13 @@ void PrintPositionBoard()
 void PrintIndexBoard()
 {
   printf("Index board:\n");
-  for (int j = 0; j < INDEX_SIZE; ++j)
+  for (int i = 0; i < INDEX_SIZE; ++i)
   {
-    if (j % 8 == 0 && j > 0)
+    if (i % 8 == 0 && i > 0)
     {
       printf("\n");
     }
-    printf("%5d", IndexToPosition[j]);
+    printf("%5d", GetPositionFromIndex(i));
   }
 }
 
@@ -644,8 +654,8 @@ void PrintBitboard(u64 key)
   {
     for (int file = FILE_A; file <= FILE_H; ++file)
     {
-      position = GetPosition(file, rank);
-      index = PositionToIndex[position];
+      position = GetPositionFromFileRank(file, rank);
+      index = GetIndexFromPosition(position);
       if (key & (1ULL << index))
       {
         printf(" X ");
@@ -669,7 +679,7 @@ void PrintAttackBoard(const int side, const Board* board)
   {
     for (int file = FILE_A; file <= FILE_H; ++file)
     {
-      position = GetPosition(file, rank);
+      position = GetPositionFromFileRank(file, rank);
       if (IsPositionAttacked(position, side, board))
       {
         printf(" X ");
@@ -695,7 +705,7 @@ void PrintBoard(const Board* board)
     for (int file = FILE_A; file <= FILE_H; ++file)
     {
       int index = rank * 8 + file;
-      int position = IndexToPosition[index];
+      int position = GetPositionFromIndex(index);
       int piece = board->pieces[position];
       printf("%3c", PieceCharacters[piece]);
     }

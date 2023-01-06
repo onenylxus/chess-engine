@@ -131,6 +131,13 @@ enum Castling
   CASTLE_SIZE = 16
 };
 
+// Move struct
+typedef struct
+{
+  int move;  // Move information
+  int score; // Move score
+} Move;
+
 // Undo-move struct
 typedef struct
 {

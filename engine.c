@@ -76,6 +76,16 @@ int GetIndexFromPosition(int position)
   return PositionToIndex[position];
 }
 
+// Get string from position
+char* GetStringFromPosition(int position)
+{
+  static char str[3];
+  int file = PositionToFile[position];
+  int rank = PositionToRank[position];
+  sprintf(str, "%c%c", 'a' + file, '1' + rank);
+  return str;
+}
+
 //// Init ////
 
 // Initialize board conversion
@@ -216,6 +226,66 @@ u64 GeneratePositionKey(const Board* board)
   key ^= CastleKeys[board->castle];
 
   return key;
+}
+
+//// Move ////
+
+// Get from position from move key
+int GetFromPositionFromMoveKey(int move)
+{
+  return move & 0x7f;
+}
+
+// Get to position from move key
+int GetToPositionFromMoveKey(int move)
+{
+  return (move >> 7) & 0x7f;
+}
+
+// Get captured piece from move key
+int GetCaptureFromMoveKey(int move)
+{
+  return (move >> 14) & 0xf;
+}
+
+// Get promoted piece from move key
+int GetPromotionFromMoveKey(int move)
+{
+  return (move >> 20) & 0xf;
+}
+
+// Get move string from move key
+char* GetStringFromMoveKey(const int move)
+{
+  static char str[6];
+  int fromFile = PositionToFile[GetFromPositionFromMoveKey(move)];
+  int fromRank = PositionToRank[GetFromPositionFromMoveKey(move)];
+  int toFile = PositionToFile[GetToPositionFromMoveKey(move)];
+  int toRank = PositionToRank[GetToPositionFromMoveKey(move)];
+  int promoted = GetPromotionFromMoveKey(move);
+
+  if (promoted)
+  {
+    char piece = 'q';
+    if (KnightPieces[promoted])
+    {
+      piece = 'n';
+    }
+    else if (RookOrQueenPieces[promoted] && !BishopOrQueenPieces[promoted])
+    {
+      piece = 'r';
+    }
+    else if (BishopOrQueenPieces[promoted] && !RookOrQueenPieces[promoted])
+    {
+      piece = 'b';
+    }
+    sprintf(str, "%c%c%c%c%c", 'a' + fromFile, '1' + fromRank, 'a' + toFile, '1' + toRank, piece);
+  }
+  else
+  {
+    sprintf(str, "%c%c%c%c%c", 'a' + fromFile, '1' + fromRank, 'a' + toFile, '1' + toRank);
+  }
+  return str;
 }
 
 //// Process ////
@@ -614,6 +684,21 @@ int IsPositionAttacked(const int position, const int side, const Board* board)
 }
 
 //// Print ////
+
+// Print move key in binary
+void PrintMoveKeyInBinary(int move)
+{
+  printf("Move key: ");
+  for (int i = 24; i >= 0; --i)
+  {
+    printf((1 << i) & move ? "1" : "0");
+    if (i == 24 || i == 20 || i == 19 || i == 18 || i == 14 || i == 7)
+    {
+      printf(" ");
+    }
+  }
+  printf("\n");
+}
 
 // Print position board
 void PrintPositionBoard()

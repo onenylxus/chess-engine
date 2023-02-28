@@ -193,6 +193,8 @@ int CountBit(u64 bit)
 }
 
 //// Hash ////
+
+// Generate position hash key
 u64 GeneratePositionKey(const Board* board)
 {
   u64 key = 0;
@@ -288,7 +290,39 @@ char* GetStringFromMoveKey(const int move)
   return str;
 }
 
+// Add quiet move to move list
+void AddQuietMove(const Board* board, int move, MoveList* list)
+{
+  list->moves[list->count].move = move;
+  list->moves[list->count].score = 0;
+  list->count++;
+}
+
+// Add capture move to move list
+void AddCaptureMove(const Board* board, int move, MoveList* list)
+{
+  list->moves[list->count].move = move;
+  list->moves[list->count].score = 0;
+  list->count++;
+}
+
+// Add en passant move to move list
+void AddEnPassantMove(const Board* board, int move, MoveList* list)
+{
+  list->moves[list->count].move = move;
+  list->moves[list->count].score = 0;
+  list->count++;
+}
+
+// Generate all moves to move list
+void GenerateAllMoves(const Board *board, MoveList* list)
+{
+  list->count = 0;
+}
+
 //// Process ////
+
+// Reset board
 void ResetBoard(Board* board)
 {
   for (int i = 0; i < POSITION_SIZE; ++i)
@@ -325,6 +359,7 @@ void ResetBoard(Board* board)
   board->positionKey = 0ULL;
 }
 
+// Check board
 int CheckBoard(const Board* board)
 {
   int counts[PIECE_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -433,6 +468,8 @@ int CheckBoard(const Board* board)
 }
 
 //// Material ////
+
+// Update material
 void UpdateMaterial(Board *board)
 {
   for (int i = 0; i < POSITION_SIZE; ++i)
@@ -487,6 +524,8 @@ void UpdateMaterial(Board *board)
 }
 
 //// Forsyth–Edwards Notation (FEN) ////
+
+// Parse FEN notation
 int ParseFen(char* fen, Board* board)
 {
   ASSERT(fen != NULL);
@@ -594,6 +633,8 @@ int ParseFen(char* fen, Board* board)
 }
 
 //// Attack ////
+
+// Check whether position is being attacked
 int IsPositionAttacked(const int position, const int side, const Board* board)
 {
   int piece = EMPTY;

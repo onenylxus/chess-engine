@@ -8,6 +8,7 @@
 #define POSITION_SIZE 120
 #define INDEX_SIZE 64
 #define MAX_MOVES 2048
+#define MAX_CHOICES 256
 #define FEN_INIT "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 // Type definitions
@@ -137,6 +138,13 @@ typedef struct
   int move;  // Move information
   int score; // Move score
 } Move;
+
+// Move list struct
+typedef struct
+{
+  Move moves[MAX_CHOICES]; // List of possible moves
+  int count;               // Number of possible moves
+} MoveList;
 
 // Undo-move struct
 typedef struct

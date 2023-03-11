@@ -230,6 +230,38 @@ u64 GeneratePositionKey(const Board* board)
   return key;
 }
 
+//// Validation ////
+
+// Check position is on the board
+int IsPositionOnBoard(const int position)
+{
+  return PositionToIndex[position] == INDEX_SIZE ? FALSE : TRUE;
+}
+
+// Check side is valid
+int IsSideValid(const int side)
+{
+  return (side == WHITE || side == BLACK) ? TRUE : FALSE;
+}
+
+// Check file or rank is valid
+int IsFileOrRankValid(const int fr)
+{
+  return (fr >= 0 && fr < 8) ? TRUE : FALSE;
+}
+
+// Check piece is valid with empty
+int IsPieceValidWithEmpty(const int piece)
+{
+  return (piece >= EMPTY && piece < PIECE_SIZE) ? TRUE : FALSE;
+}
+
+// Check piece is valid without empty
+int IsPieceValidWithoutEmpty(const int piece)
+{
+  return (piece > EMPTY && piece < PIECE_SIZE) ? TRUE : FALSE;
+}
+
 //// Move ////
 
 // Get from position from move key
@@ -640,6 +672,11 @@ int IsPositionAttacked(const int position, const int side, const Board* board)
   int piece = EMPTY;
   int direction = 0;
   int temp = position;
+
+  // Assert
+  ASSERT(IsPositionOnBoard(position));
+  ASSERT(IsSideValid(side));
+  ASSERT(CheckBoard(board));
 
   // Pawns
   if (side == WHITE)

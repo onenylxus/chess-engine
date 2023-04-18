@@ -346,6 +346,12 @@ void AddEnPassantMove(const Board* board, int move, MoveList* list)
   list->count++;
 }
 
+// Generate move key
+int GenerateMoveKey(int from, int to, int capture, int promotion, int flag)
+{
+  return from | (to << 7) | (capture << 14) | (promotion << 20) | flag;
+}
+
 // Generate all moves to move list
 void GenerateAllMoves(const Board *board, MoveList* list)
 {
@@ -891,6 +897,22 @@ void PrintBoard(const Board* board)
   printf("En passant: %d\n", board->enPassant);
   printf("Castle: %c%c%c%c\n", castleWhiteKing, castleWhiteQueen, castleBlackKing, castleBlackQueen);
   printf("Position key: %llX\n", board->positionKey);
+}
+
+// Print move list
+void PrintMoveList(const MoveList* moveList)
+{
+  int move = 0;
+  int score = 0;
+  printf("Move list:\n\n");
+
+  for (int i = 0; i < moveList->count; ++i)
+  {
+    move = moveList->moves[i].move;
+    score = moveList->moves[i].score;
+    printf("Move: %d > %s (score: %d)\n", i + 1, GetStringFromMoveKey(move), score);
+  }
+  printf("Total moves: %d\n", moveList->count);
 }
 
 //// Main ////

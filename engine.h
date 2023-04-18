@@ -9,6 +9,7 @@
 #define INDEX_SIZE 64
 #define MAX_MOVES 2048
 #define MAX_CHOICES 256
+#define MAX_PIECES 10
 #define FEN_INIT "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 // Type definitions
@@ -159,21 +160,21 @@ typedef struct
 // Board struct
 typedef struct
 {
-  int pieces[POSITION_SIZE];     // Piece states of each position
-  u64 pawns[PLAYER_SIZE];        // Pawn positions in bit for each player
-  int kingSquares[SIDE_SIZE];    // King positions for each player
-  int side;                      // Current player side to move
-  int castle;                    // Castle permutation
-  int enPassant;                 // En passant position
-  int fiftyMoves;                // Move counter for fifty moves
-  int currentPly;                // Current ply (half move)
-  int historyPly;                // History ply
-  u64 positionKey;               // Unique key for position
-  int counts[PIECE_SIZE];        // Total number of pieces on the board
-  int bigPieces[SIDE_SIZE];      // Number of big pieces (not pawns) on the board for each player
-  int majorPieces[SIDE_SIZE];    // Number of major pieces (rooks and queens) on the board for each player
-  int minorPieces[SIDE_SIZE];    // Number of minor pieces (knights and bishops) on the board for each player
-  int materials[SIDE_SIZE];      // Materials for each player
-  int pieceList[PIECE_SIZE][10]; // Position of each piece sorted by piece type
-  UndoMove history[MAX_MOVES];   // Move history
+  int pieces[POSITION_SIZE];             // Piece states of each position
+  u64 pawns[PLAYER_SIZE];                // Pawn positions in bit for each player
+  int kingSquares[SIDE_SIZE];            // King positions for each player
+  int side;                              // Current player side to move
+  int castle;                            // Castle permutation
+  int enPassant;                         // En passant position
+  int fiftyMoves;                        // Move counter for fifty moves
+  int currentPly;                        // Current ply (half move)
+  int historyPly;                        // History ply
+  u64 positionKey;                       // Unique key for position
+  int counts[PIECE_SIZE];                // Total number of pieces on the board
+  int bigPieces[SIDE_SIZE];              // Number of big pieces (not pawns) on the board for each player
+  int majorPieces[SIDE_SIZE];            // Number of major pieces (rooks and queens) on the board for each player
+  int minorPieces[SIDE_SIZE];            // Number of minor pieces (knights and bishops) on the board for each player
+  int materials[SIDE_SIZE];              // Materials for each player
+  int pieceList[PIECE_SIZE][MAX_PIECES]; // Position of each piece sorted by piece type
+  UndoMove history[MAX_MOVES];           // Move history
 } Board;

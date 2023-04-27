@@ -322,6 +322,12 @@ char* GetStringFromMoveKey(const int move)
   return str;
 }
 
+// Generate move key
+int GenerateMoveKey(int from, int to, int capture, int promotion, int flag)
+{
+  return from | (to << 7) | (capture << 14) | (promotion << 20) | flag;
+}
+
 // Add quiet move to move list
 void AddQuietMove(const Board* board, int move, MoveList* list)
 {
@@ -346,15 +352,45 @@ void AddEnPassantMove(const Board* board, int move, MoveList* list)
   list->count++;
 }
 
-// Generate move key
-int GenerateMoveKey(int from, int to, int capture, int promotion, int flag)
+// Add white pawn capture move to move list
+void AddWhitePawnCaptureMove(const Board* board, const int from, const int to, const int capture, MoveList* list)
 {
-  return from | (to << 7) | (capture << 14) | (promotion << 20) | flag;
+  if (PositionToRank[from] == RANK_7)
+  {
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_QUEEN, 0), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_ROOK, 0), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_BISHOP, 0), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_KNIGHT, 0), list);
+  }
+  else
+  {
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, EMPTY, 0), list);
+  }
+}
+
+// Add white pawn quiet move to move list
+void AddWhitePawnQuietMove(const Board* board, const int from, const int to, MoveList* list)
+{
+  if (PositionToRank[from] == RANK_7)
+  {
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_QUEEN, 0), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_ROOK, 0), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_BISHOP, 0), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_KNIGHT, 0), list);
+  }
+  else
+  {
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, EMPTY, 0), list);
+  }
 }
 
 // Generate all moves to move list
 void GenerateAllMoves(const Board *board, MoveList* list)
 {
+  // Check board
+  ASSERT(CheckBoard(board));
+
+  // Reset list count
   list->count = 0;
 }
 

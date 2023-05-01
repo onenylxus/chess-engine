@@ -5,12 +5,20 @@
 // Constants
 #define DEBUG
 #define NAME "Chess Engine"
+
 #define POSITION_SIZE 120
 #define INDEX_SIZE 64
 #define MAX_MOVES 2048
 #define MAX_CHOICES 256
 #define MAX_PIECES 10
+
 #define FEN_INIT "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+#define FLAG_EN_PASSANT 0x40000
+#define FLAG_PAWN_START 0x80000
+#define FLAG_CASTLE 0x1000000
+#define FLAG_CAPTURE 0x7c000
+#define FLAG_PROMOTION 0xf00000
 
 // Type definitions
 typedef unsigned long long u64;

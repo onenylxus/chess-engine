@@ -262,142 +262,10 @@ int IsPieceValidWithoutEmpty(const int piece)
   return (piece > EMPTY && piece < PIECE_SIZE) ? TRUE : FALSE;
 }
 
-//// Move ////
-
-// Get from position from move key
-int GetFromPositionFromMoveKey(int move)
-{
-  return move & 0x7f;
-}
-
-// Get to position from move key
-int GetToPositionFromMoveKey(int move)
-{
-  return (move >> 7) & 0x7f;
-}
-
-// Get captured piece from move key
-int GetCaptureFromMoveKey(int move)
-{
-  return (move >> 14) & 0xf;
-}
-
-// Get promoted piece from move key
-int GetPromotionFromMoveKey(int move)
-{
-  return (move >> 20) & 0xf;
-}
-
-// Get move string from move key
-char* GetStringFromMoveKey(const int move)
-{
-  static char str[6];
-  int fromFile = PositionToFile[GetFromPositionFromMoveKey(move)];
-  int fromRank = PositionToRank[GetFromPositionFromMoveKey(move)];
-  int toFile = PositionToFile[GetToPositionFromMoveKey(move)];
-  int toRank = PositionToRank[GetToPositionFromMoveKey(move)];
-  int promoted = GetPromotionFromMoveKey(move);
-
-  if (promoted)
-  {
-    char piece = 'q';
-    if (KnightPieces[promoted])
-    {
-      piece = 'n';
-    }
-    else if (RookOrQueenPieces[promoted] && !BishopOrQueenPieces[promoted])
-    {
-      piece = 'r';
-    }
-    else if (BishopOrQueenPieces[promoted] && !RookOrQueenPieces[promoted])
-    {
-      piece = 'b';
-    }
-    sprintf(str, "%c%c%c%c%c", 'a' + fromFile, '1' + fromRank, 'a' + toFile, '1' + toRank, piece);
-  }
-  else
-  {
-    sprintf(str, "%c%c%c%c%c", 'a' + fromFile, '1' + fromRank, 'a' + toFile, '1' + toRank);
-  }
-  return str;
-}
-
-// Generate move key
-int GenerateMoveKey(int from, int to, int capture, int promotion, int flag)
-{
-  return from | (to << 7) | (capture << 14) | (promotion << 20) | flag;
-}
-
-// Add quiet move to move list
-void AddQuietMove(const Board* board, int move, MoveList* list)
-{
-  list->moves[list->count].move = move;
-  list->moves[list->count].score = 0;
-  list->count++;
-}
-
-// Add capture move to move list
-void AddCaptureMove(const Board* board, int move, MoveList* list)
-{
-  list->moves[list->count].move = move;
-  list->moves[list->count].score = 0;
-  list->count++;
-}
-
-// Add en passant move to move list
-void AddEnPassantMove(const Board* board, int move, MoveList* list)
-{
-  list->moves[list->count].move = move;
-  list->moves[list->count].score = 0;
-  list->count++;
-}
-
-// Add white pawn capture move to move list
-void AddWhitePawnCaptureMove(const Board* board, const int from, const int to, const int capture, MoveList* list)
-{
-  if (PositionToRank[from] == RANK_7)
-  {
-    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_QUEEN, 0), list);
-    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_ROOK, 0), list);
-    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_BISHOP, 0), list);
-    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_KNIGHT, 0), list);
-  }
-  else
-  {
-    AddCaptureMove(board, GenerateMoveKey(from, to, capture, EMPTY, 0), list);
-  }
-}
-
-// Add white pawn quiet move to move list
-void AddWhitePawnQuietMove(const Board* board, const int from, const int to, MoveList* list)
-{
-  if (PositionToRank[from] == RANK_7)
-  {
-    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_QUEEN, 0), list);
-    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_ROOK, 0), list);
-    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_BISHOP, 0), list);
-    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_KNIGHT, 0), list);
-  }
-  else
-  {
-    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, EMPTY, 0), list);
-  }
-}
-
-// Generate all moves to move list
-void GenerateAllMoves(const Board *board, MoveList* list)
-{
-  // Check board
-  ASSERT(CheckBoard(board));
-
-  // Reset list count
-  list->count = 0;
-}
-
 //// Process ////
 
 // Reset board
-void ResetBoard(Board* board)
+void ResetBoard(Board *board)
 {
   for (int i = 0; i < POSITION_SIZE; ++i)
   {
@@ -434,15 +302,15 @@ void ResetBoard(Board* board)
 }
 
 // Check board
-int CheckBoard(const Board* board)
+int CheckBoard(const Board *board)
 {
-  int counts[PIECE_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-  int bigPieces[SIDE_SIZE] = { 0, 0 };
-  int majorPieces[SIDE_SIZE] = { 0, 0 };
-  int minorPieces[SIDE_SIZE] = { 0, 0 };
-  int materials[SIDE_SIZE] = { 0, 0 };
+  int counts[PIECE_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  int bigPieces[SIDE_SIZE] = {0, 0};
+  int majorPieces[SIDE_SIZE] = {0, 0};
+  int minorPieces[SIDE_SIZE] = {0, 0};
+  int materials[SIDE_SIZE] = {0, 0};
 
-  u64 pawns[PLAYER_SIZE] = { 0ULL, 0ULL, 0ULL };
+  u64 pawns[PLAYER_SIZE] = {0ULL, 0ULL, 0ULL};
   pawns[WHITE] = board->pawns[WHITE];
   pawns[BLACK] = board->pawns[BLACK];
   pawns[BOTH] = board->pawns[BOTH];
@@ -539,6 +407,179 @@ int CheckBoard(const Board* board)
 
   // Return
   return TRUE;
+}
+
+//// Move ////
+
+// Get from position from move key
+int GetFromPositionFromMoveKey(int move)
+{
+  return move & 0x7f;
+}
+
+// Get to position from move key
+int GetToPositionFromMoveKey(int move)
+{
+  return (move >> 7) & 0x7f;
+}
+
+// Get captured piece from move key
+int GetCaptureFromMoveKey(int move)
+{
+  return (move >> 14) & 0xf;
+}
+
+// Get promoted piece from move key
+int GetPromotionFromMoveKey(int move)
+{
+  return (move >> 20) & 0xf;
+}
+
+// Get move string from move key
+char* GetStringFromMoveKey(const int move)
+{
+  static char str[6];
+  int fromFile = PositionToFile[GetFromPositionFromMoveKey(move)];
+  int fromRank = PositionToRank[GetFromPositionFromMoveKey(move)];
+  int toFile = PositionToFile[GetToPositionFromMoveKey(move)];
+  int toRank = PositionToRank[GetToPositionFromMoveKey(move)];
+  int promoted = GetPromotionFromMoveKey(move);
+
+  if (promoted)
+  {
+    char piece = 'q';
+    if (KnightPieces[promoted])
+    {
+      piece = 'n';
+    }
+    else if (RookOrQueenPieces[promoted] && !BishopOrQueenPieces[promoted])
+    {
+      piece = 'r';
+    }
+    else if (BishopOrQueenPieces[promoted] && !RookOrQueenPieces[promoted])
+    {
+      piece = 'b';
+    }
+    sprintf(str, "%c%c%c%c%c", 'a' + fromFile, '1' + fromRank, 'a' + toFile, '1' + toRank, piece);
+  }
+  else
+  {
+    sprintf(str, "%c%c%c%c", 'a' + fromFile, '1' + fromRank, 'a' + toFile, '1' + toRank);
+  }
+  return str;
+}
+
+// Generate move key
+int GenerateMoveKey(int from, int to, int capture, int promotion, int flag)
+{
+  return from | (to << 7) | (capture << 14) | (promotion << 20) | flag;
+}
+
+// Add quiet move to move list
+void AddQuietMove(const Board* board, int move, MoveList* list)
+{
+  list->moves[list->count].move = move;
+  list->moves[list->count].score = 0;
+  list->count++;
+}
+
+// Add capture move to move list
+void AddCaptureMove(const Board* board, int move, MoveList* list)
+{
+  list->moves[list->count].move = move;
+  list->moves[list->count].score = 0;
+  list->count++;
+}
+
+// Add en passant move to move list
+void AddEnPassantMove(const Board* board, int move, MoveList* list)
+{
+  list->moves[list->count].move = move;
+  list->moves[list->count].score = 0;
+  list->count++;
+}
+
+// Add white pawn capture move to move list
+void AddWhitePawnCaptureMove(const Board* board, const int from, const int to, const int capture, MoveList* list)
+{
+  if (PositionToRank[from] == RANK_7)
+  {
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_QUEEN, 0), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_ROOK, 0), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_BISHOP, 0), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_KNIGHT, 0), list);
+  }
+  else
+  {
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, EMPTY, 0), list);
+  }
+}
+
+// Add white pawn quiet move to move list
+void AddWhitePawnQuietMove(const Board* board, const int from, const int to, MoveList* list)
+{
+  if (PositionToRank[from] == RANK_7)
+  {
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_QUEEN, 0), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_ROOK, 0), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_BISHOP, 0), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_KNIGHT, 0), list);
+  }
+  else
+  {
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, EMPTY, 0), list);
+  }
+}
+
+// Generate all moves to move list
+void GenerateAllMoves(const Board *board, MoveList* list)
+{
+  // Setup
+  ASSERT(CheckBoard(board));
+  list->count = 0;
+
+  // Check board side
+  if (board->side == WHITE)
+  {
+    // White pawn
+    for (int i = 0; i < board->counts[WHITE_PAWN]; ++i)
+    {
+      int position = board->pieceList[WHITE_PAWN][i];
+      ASSERT(IsPositionOnBoard(position));
+
+      if (board->pieces[position + 10] == EMPTY) {
+        AddWhitePawnQuietMove(board, position, position + 10, list);
+        if (PositionToRank[position] == RANK_2 && board->pieces[position + 20] == EMPTY)
+        {
+          AddQuietMove(board, GenerateMoveKey(position, position + 20, EMPTY, EMPTY, FLAG_PAWN_START), list);
+        }
+      }
+
+      if (IsPositionOnBoard(position + 9) && PieceColors[board->pieces[position + 9]] == BLACK)
+      {
+        AddWhitePawnCaptureMove(board, position, position + 9, board->pieces[position + 9], list);
+      }
+
+      if (IsPositionOnBoard(position + 11) && PieceColors[board->pieces[position + 11]] == BLACK)
+      {
+        AddWhitePawnCaptureMove(board, position, position + 11, board->pieces[position + 11], list);
+      }
+
+      if (position + 9 == board->enPassant)
+      {
+        AddCaptureMove(board, GenerateMoveKey(position, position + 9, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
+      }
+
+      if (position + 11 == board->enPassant)
+      {
+        AddCaptureMove(board, GenerateMoveKey(position, position + 11, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
+      }
+    }
+  }
+  else
+  {
+
+  }
 }
 
 //// Material ////

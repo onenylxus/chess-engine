@@ -504,14 +504,14 @@ void AddWhitePawnCaptureMove(const Board* board, const int from, const int to, c
 {
   if (PositionToRank[from] == RANK_7)
   {
-    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_QUEEN, 0), list);
-    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_ROOK, 0), list);
-    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_BISHOP, 0), list);
-    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_KNIGHT, 0), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_QUEEN, FLAG_EMPTY), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_ROOK, FLAG_EMPTY), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_BISHOP, FLAG_EMPTY), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_KNIGHT, FLAG_EMPTY), list);
   }
   else
   {
-    AddCaptureMove(board, GenerateMoveKey(from, to, capture, EMPTY, 0), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, EMPTY, FLAG_EMPTY), list);
   }
 }
 
@@ -520,14 +520,46 @@ void AddWhitePawnQuietMove(const Board* board, const int from, const int to, Mov
 {
   if (PositionToRank[from] == RANK_7)
   {
-    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_QUEEN, 0), list);
-    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_ROOK, 0), list);
-    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_BISHOP, 0), list);
-    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_KNIGHT, 0), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_QUEEN, FLAG_EMPTY), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_ROOK, FLAG_EMPTY), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_BISHOP, FLAG_EMPTY), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_KNIGHT, FLAG_EMPTY), list);
   }
   else
   {
-    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, EMPTY, 0), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, EMPTY, FLAG_EMPTY), list);
+  }
+}
+
+// Add black pawn capture move to move list
+void AddBlackPawnCaptureMove(const Board* board, const int from, const int to, const int capture, MoveList* list)
+{
+  if (PositionToRank[from] == RANK_2)
+  {
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, BLACK_QUEEN, FLAG_EMPTY), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, BLACK_ROOK, FLAG_EMPTY), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, BLACK_BISHOP, FLAG_EMPTY), list);
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, BLACK_KNIGHT, FLAG_EMPTY), list);
+  }
+  else
+  {
+    AddCaptureMove(board, GenerateMoveKey(from, to, capture, EMPTY, FLAG_EMPTY), list);
+  }
+}
+
+// Add black pawn quiet move to move list
+void AddBlackPawnQuietMove(const Board* board, const int from, const int to, MoveList* list)
+{
+  if (PositionToRank[from] == RANK_2)
+  {
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, BLACK_QUEEN, FLAG_EMPTY), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, BLACK_ROOK, FLAG_EMPTY), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, BLACK_BISHOP, FLAG_EMPTY), list);
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, BLACK_KNIGHT, FLAG_EMPTY), list);
+  }
+  else
+  {
+    AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, EMPTY, FLAG_EMPTY), list);
   }
 }
 
@@ -535,6 +567,8 @@ void AddWhitePawnQuietMove(const Board* board, const int from, const int to, Mov
 void GenerateAllMoves(const Board *board, MoveList* list)
 {
   // Setup
+  int position = EMPTY;
+
   ASSERT(CheckBoard(board));
   list->count = 0;
 
@@ -544,7 +578,7 @@ void GenerateAllMoves(const Board *board, MoveList* list)
     // White pawn
     for (int i = 0; i < board->counts[WHITE_PAWN]; ++i)
     {
-      int position = board->pieceList[WHITE_PAWN][i];
+      position = board->pieceList[WHITE_PAWN][i];
       ASSERT(IsPositionOnBoard(position));
 
       if (board->pieces[position + 10] == EMPTY) {
@@ -578,7 +612,40 @@ void GenerateAllMoves(const Board *board, MoveList* list)
   }
   else
   {
+    // Black pawn
+    for (int i = 0; i < board->counts[BLACK_PAWN]; ++i)
+    {
+      position = board->pieceList[BLACK_PAWN][i];
+      ASSERT(IsPositionOnBoard(position));
 
+      if (board->pieces[position - 10] == EMPTY) {
+        AddBlackPawnQuietMove(board, position, position - 10, list);
+        if (PositionToRank[position] == RANK_7 && board->pieces[position - 20] == EMPTY)
+        {
+          AddQuietMove(board, GenerateMoveKey(position, position - 20, EMPTY, EMPTY, FLAG_PAWN_START), list);
+        }
+      }
+
+      if (IsPositionOnBoard(position - 9) && PieceColors[board->pieces[position - 9]] == BLACK)
+      {
+        AddBlackPawnCaptureMove(board, position, position - 9, board->pieces[position - 9], list);
+      }
+
+      if (IsPositionOnBoard(position - 11) && PieceColors[board->pieces[position - 11]] == BLACK)
+      {
+        AddBlackPawnCaptureMove(board, position, position - 11, board->pieces[position - 11], list);
+      }
+
+      if (position - 9 == board->enPassant)
+      {
+        AddCaptureMove(board, GenerateMoveKey(position, position - 9, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
+      }
+
+      if (position - 11 == board->enPassant)
+      {
+        AddCaptureMove(board, GenerateMoveKey(position, position - 11, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
+      }
+    }
   }
 }
 

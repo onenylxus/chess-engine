@@ -45,16 +45,23 @@ const int MinorPieces[PIECE_SIZE] = { FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FA
 const int PieceValues[PIECE_SIZE] = { 0, 100, 325, 325, 550, 1000, 50000, 100, 325, 325, 550, 1000, 50000 };
 const int PieceColors[PIECE_SIZE] = { FALSE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK };
 
-// Attack directions
-const int KnightAttackDirection[8] = { -21, -19, -12, -8, 8, 12, 19, 21 };
-const int BishopAttackDirection[4] = { -11, -9, 9, 11 };
-const int RookAttackDirection[4] = { -10, -1, 1, 10 };
-const int KingAttackDirection[8] = { -11, -10, -9, -1, 1, 9, 10, 11 };
-
 const int KnightPieces[PIECE_SIZE] = { FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE };
 const int BishopOrQueenPieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE };
 const int RookOrQueenPieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, FALSE };
 const int KingPieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE };
+const int SlidePieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE };
+
+// Attack directions
+const int KnightAttackDirection[8] = {-21, -19, -12, -8, 8, 12, 19, 21};
+const int BishopAttackDirection[4] = { -11, -9, 9, 11 };
+const int RookAttackDirection[4] = { -10, -1, 1, 10 };
+const int KingAttackDirection[8] = { -11, -10, -9, -1, 1, 9, 10, 11 };
+
+// Piece iterators
+const int SlidePieceIterator[8] = { WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, EMPTY, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, EMPTY };
+const int NonSlidePieceIterator[6] = { WHITE_KNIGHT, WHITE_KING, EMPTY, BLACK_KNIGHT, BLACK_KING, EMPTY };
+int LoopSlideIndex[2] = { 0, 4 };
+int LoopNonSlideIndex[2] = { 0, 3 };
 
 //// Getters ////
 
@@ -283,6 +290,7 @@ void ResetBoard(Board *board)
     board->bigPieces[i] = 0;
     board->majorPieces[i] = 0;
     board->minorPieces[i] = 0;
+    board->materials[i] = 0;
   }
 
   for (int i = 0; i < PIECE_SIZE; ++i)
@@ -502,6 +510,10 @@ void AddEnPassantMove(const Board* board, int move, MoveList* list)
 // Add white pawn capture move to move list
 void AddWhitePawnCaptureMove(const Board* board, const int from, const int to, const int capture, MoveList* list)
 {
+  ASSERT(IsPieceValidWithEmpty(capture));
+  ASSERT(IsPositionOnBoard(from));
+  ASSERT(IsPositionOnBoard(to));
+
   if (PositionToRank[from] == RANK_7)
   {
     AddCaptureMove(board, GenerateMoveKey(from, to, capture, WHITE_QUEEN, FLAG_EMPTY), list);
@@ -518,6 +530,9 @@ void AddWhitePawnCaptureMove(const Board* board, const int from, const int to, c
 // Add white pawn quiet move to move list
 void AddWhitePawnQuietMove(const Board* board, const int from, const int to, MoveList* list)
 {
+  ASSERT(IsPositionOnBoard(from));
+  ASSERT(IsPositionOnBoard(to));
+
   if (PositionToRank[from] == RANK_7)
   {
     AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, WHITE_QUEEN, FLAG_EMPTY), list);
@@ -534,6 +549,10 @@ void AddWhitePawnQuietMove(const Board* board, const int from, const int to, Mov
 // Add black pawn capture move to move list
 void AddBlackPawnCaptureMove(const Board* board, const int from, const int to, const int capture, MoveList* list)
 {
+  ASSERT(IsPieceValidWithEmpty(capture));
+  ASSERT(IsPositionOnBoard(from));
+  ASSERT(IsPositionOnBoard(to));
+
   if (PositionToRank[from] == RANK_2)
   {
     AddCaptureMove(board, GenerateMoveKey(from, to, capture, BLACK_QUEEN, FLAG_EMPTY), list);
@@ -550,6 +569,9 @@ void AddBlackPawnCaptureMove(const Board* board, const int from, const int to, c
 // Add black pawn quiet move to move list
 void AddBlackPawnQuietMove(const Board* board, const int from, const int to, MoveList* list)
 {
+  ASSERT(IsPositionOnBoard(from));
+  ASSERT(IsPositionOnBoard(to));
+
   if (PositionToRank[from] == RANK_2)
   {
     AddQuietMove(board, GenerateMoveKey(from, to, EMPTY, BLACK_QUEEN, FLAG_EMPTY), list);
@@ -568,11 +590,13 @@ void GenerateAllMoves(const Board *board, MoveList* list)
 {
   // Setup
   int position = EMPTY;
+  int pieceIndex = 0;
+  int piece = 0;
 
   ASSERT(CheckBoard(board));
   list->count = 0;
 
-  // Check board side
+  // Generate pawn moves
   if (board->side == WHITE)
   {
     // White pawn
@@ -646,6 +670,26 @@ void GenerateAllMoves(const Board *board, MoveList* list)
         AddCaptureMove(board, GenerateMoveKey(position, position - 11, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
       }
     }
+  }
+
+  // Generate slide piece moves
+  pieceIndex = LoopSlideIndex[board->side];
+  piece = SlidePieceIterator[pieceIndex++];
+  while (piece != EMPTY)
+  {
+    ASSERT(IsPieceValidWithoutEmpty(piece));
+
+    piece = SlidePieceIterator[pieceIndex++];
+  }
+
+  // Generate non-slide piece moves
+  pieceIndex = LoopNonSlideIndex[board->side];
+  piece = NonSlidePieceIterator[pieceIndex];
+  while (piece != EMPTY)
+  {
+    ASSERT(IsPieceValidWithoutEmpty(piece));
+
+    piece = NonSlidePieceIterator[pieceIndex++];
   }
 }
 

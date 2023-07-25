@@ -52,10 +52,28 @@ const int KingPieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, T
 const int SlidePieces[PIECE_SIZE] = { FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE };
 
 // Attack directions
-const int KnightAttackDirection[8] = {-21, -19, -12, -8, 8, 12, 19, 21};
+const int KnightAttackDirection[8] = { -21, -19, -12, -8, 8, 12, 19, 21 };
 const int BishopAttackDirection[4] = { -11, -9, 9, 11 };
 const int RookAttackDirection[4] = { -10, -1, 1, 10 };
 const int KingAttackDirection[8] = { -11, -10, -9, -1, 1, 9, 10, 11 };
+
+// Move directions
+const int MoveDirections[PIECE_SIZE][8] = {
+  { 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0 },
+  { -21, -19, -12, -8, 8, 12, 19, 21 },
+  { -11, -9, 9, 11, 0, 0, 0, 0 },
+  { -10, -1, 1, 10, 0, 0, 0, 0 },
+  { -11, -10, -9, -1, 1, 9, 10, 11 },
+  { -11, -10, -9, -1, 1, 9, 10, 11 },
+  { 0, 0, 0, 0, 0, 0, 0, 0 },
+  { -21, -19, -12, -8, 8, 12, 19, 21 },
+  { -11, -9, 9, 11, 0, 0, 0, 0 },
+  { -10, -1, 1, 10, 0, 0, 0, 0 },
+  { -11, -10, -9, -1, 1, 9, 10, 11 },
+  { -11, -10, -9, -1, 1, 9, 10, 11 },
+};
+const int MoveDirectionCounts[PIECE_SIZE] = { 0, 0, 8, 4, 4, 8, 8, 0, 8, 4, 4, 8, 8 };
 
 // Piece iterators
 const int SlidePieceIterator[8] = { WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, EMPTY, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, EMPTY };
@@ -312,13 +330,13 @@ void ResetBoard(Board *board)
 // Check board
 int CheckBoard(const Board *board)
 {
-  int counts[PIECE_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  int bigPieces[SIDE_SIZE] = {0, 0};
-  int majorPieces[SIDE_SIZE] = {0, 0};
-  int minorPieces[SIDE_SIZE] = {0, 0};
-  int materials[SIDE_SIZE] = {0, 0};
+  int counts[PIECE_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  int bigPieces[SIDE_SIZE] = { 0, 0 };
+  int majorPieces[SIDE_SIZE] = { 0, 0 };
+  int minorPieces[SIDE_SIZE] = { 0, 0 };
+  int materials[SIDE_SIZE] = { 0, 0 };
 
-  u64 pawns[PLAYER_SIZE] = {0ULL, 0ULL, 0ULL};
+  u64 pawns[PLAYER_SIZE] = { 0ULL, 0ULL, 0ULL };
   pawns[WHITE] = board->pawns[WHITE];
   pawns[BLACK] = board->pawns[BLACK];
   pawns[BOTH] = board->pawns[BOTH];
@@ -590,6 +608,8 @@ void GenerateAllMoves(const Board *board, MoveList* list)
 {
   // Setup
   int position = EMPTY;
+  int target = EMPTY;
+  int direction = 0;
   int pieceIndex = 0;
   int piece = 0;
 
@@ -688,6 +708,32 @@ void GenerateAllMoves(const Board *board, MoveList* list)
   while (piece != EMPTY)
   {
     ASSERT(IsPieceValidWithoutEmpty(piece));
+
+    for (int i = 0; i < board->counts[piece]; ++i)
+    {
+      position = board->pieceList[piece][i];
+      ASSERT(IsPositionOnBoard(position));
+
+      for (int j = 0; j < MoveDirectionCounts[piece]; ++j)
+      {
+        direction = MoveDirections[piece][j];
+        target = position + direction;
+
+        if (!IsPositionOnBoard(target))
+        {
+          continue;
+        }
+        if (board->pieces[target] != EMPTY)
+        {
+          if (PieceColors[board->pieces[target]] == board->side ^ 1)
+          {
+            // capture move
+            continue;
+          }
+          // quiet move
+        }
+      }
+    }
 
     piece = NonSlidePieceIterator[pieceIndex++];
   }

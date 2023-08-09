@@ -699,6 +699,32 @@ void GenerateAllMoves(const Board *board, MoveList* list)
   {
     ASSERT(IsPieceValidWithoutEmpty(piece));
 
+    for (int i = 0; i < board->counts[piece]; ++i)
+    {
+      position = board->pieceList[piece][i];
+      ASSERT(IsPositionOnBoard(position));
+
+      for (int j = 0; j < MoveDirectionCounts[piece]; ++j)
+      {
+        direction = MoveDirections[piece][j];
+        target = position + direction;
+
+        while (!IsPositionOnBoard(target))
+        {
+          if (board->pieces[target] != EMPTY)
+          {
+            if (PieceColors[board->pieces[target]] == board->side ^ 1)
+            {
+              // capture move
+            }
+            break;
+          }
+          // quiet move
+          target += direction;
+        }
+      }
+    }
+
     piece = SlidePieceIterator[pieceIndex++];
   }
 
@@ -728,10 +754,10 @@ void GenerateAllMoves(const Board *board, MoveList* list)
           if (PieceColors[board->pieces[target]] == board->side ^ 1)
           {
             // capture move
-            continue;
           }
-          // quiet move
+          continue;
         }
+        // quiet move
       }
     }
 

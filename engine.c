@@ -435,6 +435,103 @@ int CheckBoard(const Board *board)
   return TRUE;
 }
 
+//// Attack ////
+
+// Check whether position is being attacked
+int IsPositionAttacked(const int position, const int side, const Board *board)
+{
+  int piece = EMPTY;
+  int direction = 0;
+  int temp = position;
+
+  // Assert
+  ASSERT(IsPositionOnBoard(position));
+  ASSERT(IsSideValid(side));
+  ASSERT(CheckBoard(board));
+
+  // Pawns
+  if (side == WHITE)
+  {
+    if (board->pieces[position - 11] == WHITE_PAWN || board->pieces[position - 9] == WHITE_PAWN)
+    {
+      return TRUE;
+    }
+  }
+  else
+  {
+    if (board->pieces[position + 9] == BLACK_PAWN || board->pieces[position + 11] == BLACK_PAWN)
+    {
+      return TRUE;
+    }
+  }
+
+  // Knights
+  for (int i = 0; i < 8; ++i)
+  {
+    piece = board->pieces[position + KnightAttackDirection[i]];
+    if (KnightPieces[piece] && PieceColors[piece] == side)
+    {
+      return TRUE;
+    }
+  }
+
+  // Bishops or queens
+  for (int i = 0; i < 4; ++i)
+  {
+    direction = BishopAttackDirection[i];
+    temp = position + direction;
+    piece = board->pieces[temp];
+
+    while (piece != OB)
+    {
+      if (piece != EMPTY)
+      {
+        if (BishopOrQueenPieces[piece] && PieceColors[piece] == side)
+        {
+          return TRUE;
+        }
+        break;
+      }
+      temp += direction;
+      piece = board->pieces[temp];
+    }
+  }
+
+  // Rooks or queens
+  for (int i = 0; i < 4; ++i)
+  {
+    direction = RookAttackDirection[i];
+    temp = position + direction;
+    piece = board->pieces[temp];
+
+    while (piece != OB)
+    {
+      if (piece != EMPTY)
+      {
+        if (RookOrQueenPieces[piece] && PieceColors[piece] == side)
+        {
+          return TRUE;
+        }
+        break;
+      }
+      temp += direction;
+      piece = board->pieces[temp];
+    }
+  }
+
+  // Kings
+  for (int i = 0; i < 8; ++i)
+  {
+    piece = board->pieces[position + KingAttackDirection[i]];
+    if (KingPieces[piece] && PieceColors[piece] == side)
+    {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 //// Move ////
 
 // Get from position from move key
@@ -659,7 +756,7 @@ void GenerateAllMoves(const Board *board, MoveList* list)
     {
       if (board->pieces[F1] == EMPTY && board->pieces[G1] == EMPTY && !IsPositionAttacked(E1, BLACK, board) && !IsPositionAttacked(F1, BLACK, board))
       {
-        // white castles to king side
+        AddQuietMove(board, GenerateMoveKey(E1, G1, EMPTY, EMPTY, FLAG_CASTLE), list);
       }
     }
 
@@ -667,7 +764,7 @@ void GenerateAllMoves(const Board *board, MoveList* list)
     {
       if (board->pieces[D1] == EMPTY && board->pieces[C1] == EMPTY && board->pieces[B1] == EMPTY && !IsPositionAttacked(E1, BLACK, board) && !IsPositionAttacked(D1, BLACK, board))
       {
-        // white castles to queen side
+        AddQuietMove(board, GenerateMoveKey(E1, C1, EMPTY, EMPTY, FLAG_CASTLE), list);
       }
     }
   }
@@ -713,7 +810,7 @@ void GenerateAllMoves(const Board *board, MoveList* list)
     {
       if (board->pieces[F8] == EMPTY && board->pieces[G8] == EMPTY && !IsPositionAttacked(E8, WHITE, board) && !IsPositionAttacked(F8, WHITE, board))
       {
-        // black castles to king side
+        AddQuietMove(board, GenerateMoveKey(E8, G8, EMPTY, EMPTY, FLAG_CASTLE), list);
       }
     }
 
@@ -721,7 +818,7 @@ void GenerateAllMoves(const Board *board, MoveList* list)
     {
       if (board->pieces[D8] == EMPTY && board->pieces[C8] == EMPTY && board->pieces[B8] == EMPTY && !IsPositionAttacked(E8, WHITE, board) && !IsPositionAttacked(D8, WHITE, board))
       {
-        // black castles to queen side
+        AddQuietMove(board, GenerateMoveKey(E8, C8, EMPTY, EMPTY, FLAG_CASTLE), list);
       }
     }
   }
@@ -749,11 +846,11 @@ void GenerateAllMoves(const Board *board, MoveList* list)
           {
             if (PieceColors[board->pieces[target]] == board->side ^ 1)
             {
-              // capture move
+              AddCaptureMove(board, GenerateMoveKey(position, target, board->pieces[target], EMPTY, FLAG_EMPTY), list);
             }
             break;
           }
-          // quiet move
+          AddQuietMove(board, GenerateMoveKey(position, target, EMPTY, EMPTY, FLAG_EMPTY), list);
           target += direction;
         }
       }
@@ -787,11 +884,11 @@ void GenerateAllMoves(const Board *board, MoveList* list)
         {
           if (PieceColors[board->pieces[target]] == board->side ^ 1)
           {
-            // capture move
+            AddCaptureMove(board, GenerateMoveKey(position, target, board->pieces[target], EMPTY, FLAG_EMPTY), list);
           }
           continue;
         }
-        // quiet move
+        AddQuietMove(board, GenerateMoveKey(position, target, EMPTY, EMPTY, FLAG_EMPTY), list);
       }
     }
 
@@ -962,103 +1059,6 @@ int ParseFen(char* fen, Board* board)
   board->positionKey = GeneratePositionKey(board);
   UpdateMaterial(board);
   return 0;
-}
-
-//// Attack ////
-
-// Check whether position is being attacked
-int IsPositionAttacked(const int position, const int side, const Board* board)
-{
-  int piece = EMPTY;
-  int direction = 0;
-  int temp = position;
-
-  // Assert
-  ASSERT(IsPositionOnBoard(position));
-  ASSERT(IsSideValid(side));
-  ASSERT(CheckBoard(board));
-
-  // Pawns
-  if (side == WHITE)
-  {
-    if (board->pieces[position - 11] == WHITE_PAWN || board->pieces[position - 9] == WHITE_PAWN)
-    {
-      return TRUE;
-    }
-  }
-  else
-  {
-    if (board->pieces[position + 9] == BLACK_PAWN || board->pieces[position + 11] == BLACK_PAWN)
-    {
-      return TRUE;
-    }
-  }
-
-  // Knights
-  for (int i = 0; i < 8; ++i)
-  {
-    piece = board->pieces[position + KnightAttackDirection[i]];
-    if (KnightPieces[piece] && PieceColors[piece] == side)
-    {
-      return TRUE;
-    }
-  }
-
-  // Bishops or queens
-  for (int i = 0; i < 4; ++i)
-  {
-    direction = BishopAttackDirection[i];
-    temp = position + direction;
-    piece = board->pieces[temp];
-
-    while (piece != OB)
-    {
-      if (piece != EMPTY)
-      {
-        if (BishopOrQueenPieces[piece] && PieceColors[piece] == side)
-        {
-          return TRUE;
-        }
-        break;
-      }
-      temp += direction;
-      piece = board->pieces[temp];
-    }
-  }
-
-  // Rooks or queens
-  for (int i = 0; i < 4; ++i)
-  {
-    direction = RookAttackDirection[i];
-    temp = position + direction;
-    piece = board->pieces[temp];
-
-    while (piece != OB)
-    {
-      if (piece != EMPTY)
-      {
-        if (RookOrQueenPieces[piece] && PieceColors[piece] == side)
-        {
-          return TRUE;
-        }
-        break;
-      }
-      temp += direction;
-      piece = board->pieces[temp];
-    }
-  }
-
-  // Kings
-  for (int i = 0; i < 8; ++i)
-  {
-    piece = board->pieces[position + KingAttackDirection[i]];
-    if (KingPieces[piece] && PieceColors[piece] == side)
-    {
-      return TRUE;
-    }
-  }
-
-  return FALSE;
 }
 
 //// Print ////

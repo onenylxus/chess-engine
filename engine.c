@@ -59,19 +59,19 @@ const int KingAttackDirection[8] = { -11, -10, -9, -1, 1, 9, 10, 11 };
 
 // Move directions
 const int MoveDirections[PIECE_SIZE][8] = {
-  { 0, 0, 0, 0, 0, 0, 0, 0 },
-  { 0, 0, 0, 0, 0, 0, 0, 0 },
-  { -21, -19, -12, -8, 8, 12, 19, 21 },
-  { -11, -9, 9, 11, 0, 0, 0, 0 },
-  { -10, -1, 1, 10, 0, 0, 0, 0 },
-  { -11, -10, -9, -1, 1, 9, 10, 11 },
-  { -11, -10, -9, -1, 1, 9, 10, 11 },
-  { 0, 0, 0, 0, 0, 0, 0, 0 },
-  { -21, -19, -12, -8, 8, 12, 19, 21 },
-  { -11, -9, 9, 11, 0, 0, 0, 0 },
-  { -10, -1, 1, 10, 0, 0, 0, 0 },
-  { -11, -10, -9, -1, 1, 9, 10, 11 },
-  { -11, -10, -9, -1, 1, 9, 10, 11 },
+  {   0,   0,   0,   0,   0,   0,   0,   0 },
+  {   0,   0,   0,   0,   0,   0,   0,   0 },
+  { -21, -19, -12,  -8,   8,  12,  19,  21 },
+  { -11,  -9,   9,  11,   0,   0,   0,   0 },
+  { -10,  -1,   1,  10,   0,   0,   0,   0 },
+  { -11, -10,  -9,  -1,   1,   9,  10,  11 },
+  { -11, -10,  -9,  -1,   1,   9,  10,  11 },
+  {   0,   0,   0,   0,   0,   0,   0,   0 },
+  { -21, -19, -12,  -8,   8,  12,  19,  21 },
+  { -11,  -9,   9,  11,   0,   0,   0,   0 },
+  { -10,  -1,   1,  10,   0,   0,   0,   0 },
+  { -11, -10,  -9,  -1,   1,   9,  10,  11 },
+  { -11, -10,  -9,  -1,   1,   9,  10,  11 },
 };
 const int MoveDirectionCounts[PIECE_SIZE] = { 0, 0, 8, 4, 4, 8, 8, 0, 8, 4, 4, 8, 8 };
 
@@ -80,6 +80,22 @@ const int SlidePieceIterator[8] = { WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, EMPTY
 const int NonSlidePieceIterator[6] = { WHITE_KNIGHT, WHITE_KING, EMPTY, BLACK_KNIGHT, BLACK_KING, EMPTY };
 int LoopSlideIndex[2] = { 0, 4 };
 int LoopNonSlideIndex[2] = { 0, 3 };
+
+// Castle permissions
+const int CastlePermissions[POSITION_SIZE] = {
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 13, 15, 15, 15, 12, 15, 15, 14, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15,  7, 15, 15, 15,  3, 15, 15, 11, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+};
 
 //// Getters ////
 
@@ -219,6 +235,30 @@ int CountBit(u64 bit)
 
 //// Hash ////
 
+// Hash piece
+void HashPiece(Board* board, const int piece, const int position)
+{
+  board->positionKey ^= PieceKeys[piece][position];
+}
+
+// Hash castle
+void HashCastle(Board* board)
+{
+  board->positionKey ^= CastleKeys[board->castle];
+}
+
+// Hash side
+void HashSide(Board* board)
+{
+  board->positionKey ^= SideKey;
+}
+
+// Hash en passant
+void HashEnPassant(Board* board)
+{
+  board->positionKey ^= PieceKeys[EMPTY][board->enPassant];
+}
+
 // Generate position hash key
 u64 GeneratePositionKey(const Board* board)
 {
@@ -304,11 +344,15 @@ void ResetBoard(Board *board)
 
   for (int i = 0; i < SIDE_SIZE; ++i)
   {
-    board->pawns[i] = 0ULL;
     board->bigPieces[i] = 0;
     board->majorPieces[i] = 0;
     board->minorPieces[i] = 0;
     board->materials[i] = 0;
+  }
+
+  for (int i = 0; i < PLAYER_SIZE; ++i)
+  {
+    board->pawns[i] = 0ULL;
   }
 
   for (int i = 0; i < PIECE_SIZE; ++i)

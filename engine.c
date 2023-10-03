@@ -940,6 +940,52 @@ void GenerateAllMoves(const Board *board, MoveList* list)
   }
 }
 
+void ClearPiece(const int position, Board *board)
+{
+  ASSERT(IsPositionOnBoard(position));
+
+  int piece = board->pieces[position];
+  ASSERT(IsPieceValidWithoutEmpty(piece));
+
+  HashPiece(board, piece, position);
+
+  int color = PieceColors[piece];
+  board->pieces[position] = EMPTY;
+  board->materials[color] -= PieceValues[piece];
+
+  if (BigPieces[piece])
+  {
+    board->bigPieces[color]--;
+    if (MajorPieces[piece])
+    {
+      board->majorPieces[color]--;
+    }
+    else
+    {
+      board->minorPieces[color]--;
+    }
+  }
+  else
+  {
+    ClearBit(&board->pawns[color], PositionToIndex[position]);
+    ClearBit(&board->pawns[BOTH], PositionToIndex[position]);
+  }
+
+  int target = -1;
+  for (int i = 0; i < board->pieces[piece]; ++i)
+  {
+    if (board->pieceList[piece][i] == position)
+    {
+      target = i;
+      break;
+    }
+  }
+  ASSERT(target != -1);
+
+  board->counts[piece]--;
+  board->pieceList[piece][target] = board->pieceList[piece][board->counts[piece]];
+}
+
 //// Material ////
 
 // Update material

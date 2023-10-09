@@ -798,7 +798,9 @@ void GenerateAllMoves(const Board *board, MoveList* list)
     // White castling
     if (board->castle & CASTLE_WHITE_KING)
     {
-      if (board->pieces[F1] == EMPTY && board->pieces[G1] == EMPTY && !IsPositionAttacked(E1, BLACK, board) && !IsPositionAttacked(F1, BLACK, board))
+      int isPathCleared = board->pieces[F1] == EMPTY && board->pieces[G1] == EMPTY;
+      int isPositionSafe = !IsPositionAttacked(E1, BLACK, board) && !IsPositionAttacked(F1, BLACK, board);
+      if (isPathCleared && isPositionSafe)
       {
         AddQuietMove(board, GenerateMoveKey(E1, G1, EMPTY, EMPTY, FLAG_CASTLE), list);
       }
@@ -806,7 +808,9 @@ void GenerateAllMoves(const Board *board, MoveList* list)
 
     if (board->castle & CASTLE_WHITE_QUEEN)
     {
-      if (board->pieces[D1] == EMPTY && board->pieces[C1] == EMPTY && board->pieces[B1] == EMPTY && !IsPositionAttacked(E1, BLACK, board) && !IsPositionAttacked(D1, BLACK, board))
+      int isPathCleared = board->pieces[D1] == EMPTY && board->pieces[C1] == EMPTY && board->pieces[B1] == EMPTY;
+      int isPositionSafe = !IsPositionAttacked(E1, BLACK, board) && !IsPositionAttacked(D1, BLACK, board);
+      if (isPathCleared && isPositionSafe)
       {
         AddQuietMove(board, GenerateMoveKey(E1, C1, EMPTY, EMPTY, FLAG_CASTLE), list);
       }
@@ -852,7 +856,9 @@ void GenerateAllMoves(const Board *board, MoveList* list)
     // Black castling
     if (board->castle & CASTLE_BLACK_KING)
     {
-      if (board->pieces[F8] == EMPTY && board->pieces[G8] == EMPTY && !IsPositionAttacked(E8, WHITE, board) && !IsPositionAttacked(F8, WHITE, board))
+      int isPathCleared = board->pieces[F8] == EMPTY && board->pieces[G8] == EMPTY;
+      int isPositionSafe = !IsPositionAttacked(E8, WHITE, board) && !IsPositionAttacked(F8, WHITE, board);
+      if (isPathCleared && isPositionSafe)
       {
         AddQuietMove(board, GenerateMoveKey(E8, G8, EMPTY, EMPTY, FLAG_CASTLE), list);
       }
@@ -860,7 +866,9 @@ void GenerateAllMoves(const Board *board, MoveList* list)
 
     if (board->castle & CASTLE_BLACK_QUEEN)
     {
-      if (board->pieces[D8] == EMPTY && board->pieces[C8] == EMPTY && board->pieces[B8] == EMPTY && !IsPositionAttacked(E8, WHITE, board) && !IsPositionAttacked(D8, WHITE, board))
+      int isPathCleared = board->pieces[D8] == EMPTY && board->pieces[C8] == EMPTY && board->pieces[B8] == EMPTY;
+      int isPositionSafe = !IsPositionAttacked(E8, WHITE, board) && !IsPositionAttacked(D8, WHITE, board);
+      if (isPathCleared && isPositionSafe)
       {
         AddQuietMove(board, GenerateMoveKey(E8, C8, EMPTY, EMPTY, FLAG_CASTLE), list);
       }

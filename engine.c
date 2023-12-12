@@ -300,7 +300,7 @@ u64 GeneratePositionKey(const Board* board)
 // Check position is on the board
 int IsPositionOnBoard(const int position)
 {
-  return PositionToIndex[position] == INDEX_SIZE ? FALSE : TRUE;
+  return GetIndexFromPosition(position) == INDEX_SIZE ? FALSE : TRUE;
 }
 
 // Check side is valid
@@ -948,6 +948,7 @@ void GenerateAllMoves(const Board *board, MoveList* list)
   }
 }
 
+// Clear piece
 void ClearPiece(const int position, Board *board)
 {
   ASSERT(IsPositionOnBoard(position));
@@ -975,12 +976,12 @@ void ClearPiece(const int position, Board *board)
   }
   else
   {
-    ClearBit(&board->pawns[color], PositionToIndex[position]);
-    ClearBit(&board->pawns[BOTH], PositionToIndex[position]);
+    ClearBit(&board->pawns[color], GetIndexFromPosition(position));
+    ClearBit(&board->pawns[BOTH], GetIndexFromPosition(position));
   }
 
   int target = -1;
-  for (int i = 0; i < board->pieces[piece]; ++i)
+  for (int i = 0; i < board->counts[piece]; ++i)
   {
     if (board->pieceList[piece][i] == position)
     {
@@ -992,6 +993,78 @@ void ClearPiece(const int position, Board *board)
 
   board->counts[piece]--;
   board->pieceList[piece][target] = board->pieceList[piece][board->counts[piece]];
+}
+
+// Add piece
+void AddPiece(const int position, Board *board, int piece)
+{
+  ASSERT(IsPositionOnBoard(position));
+  ASSERT(IsPieceValidWithoutEmpty(piece));
+
+  int color = PieceColors[piece];
+
+  HashPiece(board, piece, position);
+  board->pieces[position] = piece;
+
+  if (BigPieces[piece])
+  {
+    board->bigPieces[color]++;
+    if (MajorPieces[piece])
+    {
+      board->majorPieces[color]++;
+    }
+    else
+    {
+      board->minorPieces[color]++;
+    }
+  }
+  else
+  {
+    SetBit(&board->pawns[color], GetIndexFromPosition(position));
+    SetBit(&board->pawns[BOTH], GetIndexFromPosition(position));
+  }
+
+  board->materials[color] += PieceValues[piece];
+  board->pieceList[piece][board->counts[piece]++] = position;
+}
+
+// Move piece
+void MovePiece(const int from, const int to, Board *board)
+{
+  ASSERT(IsPositionOnBoard(from));
+  ASSERT(IsPositionOnBoard(to));
+
+  int piece = board->pieces[from];
+  int color = PieceColors[piece];
+#ifdef DEBUG
+  int pieceNum = FALSE;
+#endif
+
+  HashPiece(board, EMPTY, from);
+  board->pieces[from] = EMPTY;
+  HashPiece(board, piece, to);
+  board->pieces[to] = piece;
+
+  if (!BigPieces[piece])
+  {
+    ClearBit(&board->pawns[color], GetIndexFromPosition(from));
+    ClearBit(&board->pawns[BOTH], GetIndexFromPosition(from));
+    SetBit(&board->pawns[color], GetIndexFromPosition(to));
+    SetBit(&board->pawns[BOTH], GetIndexFromPosition(to));
+  }
+
+  for (int i = 0; i < board->counts[piece]; ++i)
+  {
+    if (board->pieceList[piece][i] == from)
+    {
+      board->pieceList[piece][i] = to;
+#ifdef DEBUG
+      pieceNum = TRUE;
+#endif
+      break;
+    }
+  }
+  ASSERT(pieceNum);
 }
 
 //// Material ////

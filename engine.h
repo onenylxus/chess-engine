@@ -160,7 +160,7 @@ typedef struct
 typedef struct
 {
   int move;             // Move value
-  int castlePermission; // Castle permission
+  int castle;           // Castle permissions
   int enPassant;        // En passant position
   int fiftyMoves;       // Move counter for fifty moves
   u64 positionKey;      // Unique key for position
@@ -173,7 +173,7 @@ typedef struct
   u64 pawns[PLAYER_SIZE];                // Pawn positions in bit for each player
   int kingSquares[SIDE_SIZE];            // King positions for each player
   int side;                              // Current player side to move
-  int castle;                            // Castle permutation
+  int castle;                            // Castle permissions
   int enPassant;                         // En passant position
   int fiftyMoves;                        // Move counter for fifty moves
   int currentPly;                        // Current ply (half move)

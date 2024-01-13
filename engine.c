@@ -1067,6 +1067,134 @@ void MovePiece(const int from, const int to, Board *board)
   ASSERT(pieceNum);
 }
 
+// Make move
+int MakeMove(Board *board, int move)
+{
+  // Check input valid
+  ASSERT(CheckBoard(board));
+
+  int from = GetFromPositionFromMoveKey(move);
+  int to = GetToPositionFromMoveKey(move);
+  int side = board->side;
+
+  ASSERT(IsPositionOnBoard(from));
+  ASSERT(IsPositionOnBoard(to));
+  ASSERT(IsSideValid(side));
+  ASSERT(IsPieceValidWithoutEmpty(board->pieces[from]));
+
+  // Save position key to history
+  board->history[board->historyPly].positionKey = board->positionKey;
+
+  // Special moves
+  if (move & FLAG_EN_PASSANT)
+  {
+    ClearPiece(to + (side == WHITE ? -10 : 10), board);
+  }
+  else if (move & FLAG_CASTLE)
+  {
+    switch (to)
+    {
+      case C1:
+        MovePiece(A1, D1, board);
+        break;
+      case C8:
+        MovePiece(A8, D8, board);
+        break;
+      case G1:
+        MovePiece(H1, F1, board);
+        break;
+      case G8:
+        MovePiece(H8, F8, board);
+        break;
+      default:
+        ASSERT(FALSE);
+    }
+  }
+
+  // Update and hash
+  if (board->enPassant != XX)
+  {
+    HashEnPassant(board);
+  }
+  HashCastle(board);
+
+  board->history[board->historyPly].move = move;
+  board->history[board->historyPly].fiftyMoves = board->fiftyMoves;
+  board->history[board->historyPly].enPassant = board->enPassant;
+  board->history[board->historyPly].castle = board->castle;
+
+  board->castle &= CastlePermissions[from];
+  board->castle &= CastlePermissions[to];
+  board->enPassant = XX;
+
+  HashCastle(board);
+
+  // Fifty moves check
+  int capture = GetCaptureFromMoveKey(move);
+  board->fiftyMoves++;
+
+  if (capture != EMPTY)
+  {
+    ASSERT(IsPieceValidWithoutEmpty(capture));
+    ClearPiece(to, board);
+    board->fiftyMoves = 0;
+  }
+
+  // Increment ply
+  board->historyPly++;
+  board->currentPly++;
+
+  // Set new en passant position
+  if (!BigPieces[board->pieces[from]])
+  {
+    board->fiftyMoves = 0;
+    if (move & FLAG_PAWN_START)
+    {
+      if (side == WHITE)
+      {
+        board->enPassant = from + 10;
+        ASSERT(PositionToRank[board->enPassant] == RANK_3);
+      }
+      else
+      {
+        board->enPassant = from - 10;
+        ASSERT(PositionToRank[board->enPassant] == RANK_6);
+      }
+      HashEnPassant(board);
+    }
+  }
+
+  // Move piece
+  MovePiece(from, to, board);
+
+  // Promotion
+  int promote = GetPromotionFromMoveKey(move);
+  if (promote != EMPTY)
+  {
+    ASSERT(IsPieceValidWithoutEmpty(promote) && BigPieces[promote]);
+    ClearPiece(to, board);
+    AddPiece(to, board, promote);
+  }
+
+  // Update king position
+  if (KingPieces[board->pieces[to]])
+  {
+    board->kingSquares[side] = to;
+  }
+
+  // Change side
+  board->side ^= 1;
+  HashSide(board);
+
+  // Finalize
+  ASSERT(CheckBoard(board));
+  if (IsPositionAttacked(board->kingSquares[side], board->side, board))
+  {
+    return FALSE;
+  }
+  return TRUE;
+}
+
 //// Material ////
 
 // Update material

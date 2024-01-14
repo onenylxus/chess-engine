@@ -1067,6 +1067,102 @@ void MovePiece(const int from, const int to, Board *board)
   ASSERT(pieceNum);
 }
 
+// Take move
+void TakeMove(Board *board)
+{
+  // Check input valid
+  ASSERT(CheckBoard(board));
+
+  // Decrement ply
+  board->historyPly--;
+  board->currentPly--;
+
+  // Get latest move in history
+  int move = board->history[board->historyPly].move;
+  int from = GetFromPositionFromMoveKey(move);
+  int to = GetToPositionFromMoveKey(move);
+
+  ASSERT(IsPositionOnBoard(from));
+  ASSERT(IsPositionOnBoard(to));
+
+  // Reverse move
+  if (board->enPassant != XX)
+  {
+    HashEnPassant(board);
+  }
+  HashCastle(board);
+
+  board->castle = board->history[board->historyPly].castle;
+  board->fiftyMoves = board->history[board->historyPly].fiftyMoves;
+  board->enPassant = board->history[board->historyPly].enPassant;
+
+  if (board->enPassant != XX)
+  {
+    HashEnPassant(board);
+  }
+  HashCastle(board);
+
+  board->side ^= 1;
+  HashSide(board);
+
+  if (move & FLAG_EN_PASSANT)
+  {
+    if (board->side == WHITE)
+    {
+      AddPiece(to - 10, board, BLACK_PAWN);
+    }
+    else
+    {
+      AddPiece(to + 10, board, WHITE_PAWN);
+    }
+  }
+  else if (move & FLAG_CASTLE)
+  {
+    switch (to)
+    {
+      case C1:
+        MovePiece(D1, A1, board);
+        break;
+      case C8:
+        MovePiece(D8, A8, board);
+        break;
+      case G1:
+        MovePiece(F1, H1, board);
+        break;
+      case G8:
+        MovePiece(F8, H8, board);
+        break;
+      default:
+        ASSERT(FALSE);
+    }
+  }
+
+  MovePiece(to, from, board);
+
+  if (KingPieces[board->pieces[from]])
+  {
+    board->kingSquares[board->side] = from;
+  }
+
+  int capture = GetCaptureFromMoveKey(move);
+  if (capture != EMPTY)
+  {
+    ASSERT(IsPieceValidWithoutEmpty(capture));
+    AddPiece(to, board, capture);
+  }
+
+  int promote = GetPromotionFromMoveKey(move);
+  if (promote != EMPTY)
+  {
+    ASSERT(IsPieceValidWithoutEmpty(promote) && BigPieces[promote]);
+    ClearPiece(from, board);
+    AddPiece(from, board, PieceColors[promote] == WHITE ? WHITE_PAWN : BLACK_PAWN);
+  }
+
+  // Finalize
+  ASSERT(CheckBoard(board));
+}
+
 // Make move
 int MakeMove(Board *board, int move)
 {
@@ -1190,6 +1286,7 @@ int MakeMove(Board *board, int move)
   ASSERT(CheckBoard(board));
   if (IsPositionAttacked(board->kingSquares[side], board->side, board))
   {
+    TakeMove(board);
     return FALSE;
   }
   return TRUE;

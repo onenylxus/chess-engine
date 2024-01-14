@@ -118,7 +118,7 @@ int GetIndexFromPosition(int position)
 }
 
 // Get string from position
-char* GetStringFromPosition(int position)
+char *GetStringFromPosition(int position)
 {
   static char str[3];
   int file = PositionToFile[position];
@@ -201,7 +201,7 @@ void Init()
 //// Bitboard ////
 
 // Pop bit
-int PopBit(u64* bb)
+int PopBit(u64 *bb)
 {
   u64 b = *bb ^ (*bb - 1);
   unsigned int fold = (unsigned int)((b & 0xffffffff) ^ (b >> 32));
@@ -210,13 +210,13 @@ int PopBit(u64* bb)
 }
 
 // Set bit
-void SetBit(u64* bb, int index)
+void SetBit(u64 *bb, int index)
 {
   *bb |= SetMask[index];
 }
 
 // Clear bit
-void ClearBit(u64* bb, int index)
+void ClearBit(u64 *bb, int index)
 {
   *bb &= ClearMask[index];
 }
@@ -236,31 +236,31 @@ int CountBit(u64 bit)
 //// Hash ////
 
 // Hash piece
-void HashPiece(Board* board, const int piece, const int position)
+void HashPiece(Board *board, const int piece, const int position)
 {
   board->positionKey ^= PieceKeys[piece][position];
 }
 
 // Hash castle
-void HashCastle(Board* board)
+void HashCastle(Board *board)
 {
   board->positionKey ^= CastleKeys[board->castle];
 }
 
 // Hash side
-void HashSide(Board* board)
+void HashSide(Board *board)
 {
   board->positionKey ^= SideKey;
 }
 
 // Hash en passant
-void HashEnPassant(Board* board)
+void HashEnPassant(Board *board)
 {
   board->positionKey ^= PieceKeys[EMPTY][board->enPassant];
 }
 
 // Generate position hash key
-u64 GeneratePositionKey(const Board* board)
+u64 GeneratePositionKey(const Board *board)
 {
   u64 key = 0;
 
@@ -603,7 +603,7 @@ int GetPromotionFromMoveKey(int move)
 }
 
 // Get move string from move key
-char* GetStringFromMoveKey(const int move)
+char *GetStringFromMoveKey(const int move)
 {
   static char str[6];
   int fromFile = PositionToFile[GetFromPositionFromMoveKey(move)];
@@ -643,7 +643,7 @@ int GenerateMoveKey(int from, int to, int capture, int promotion, int flag)
 }
 
 // Add quiet move to move list
-void AddQuietMove(const Board* board, int move, MoveList* list)
+void AddQuietMove(const Board *board, int move, MoveList *list)
 {
   list->moves[list->count].move = move;
   list->moves[list->count].score = 0;
@@ -651,7 +651,7 @@ void AddQuietMove(const Board* board, int move, MoveList* list)
 }
 
 // Add capture move to move list
-void AddCaptureMove(const Board* board, int move, MoveList* list)
+void AddCaptureMove(const Board *board, int move, MoveList *list)
 {
   list->moves[list->count].move = move;
   list->moves[list->count].score = 0;
@@ -659,7 +659,7 @@ void AddCaptureMove(const Board* board, int move, MoveList* list)
 }
 
 // Add en passant move to move list
-void AddEnPassantMove(const Board* board, int move, MoveList* list)
+void AddEnPassantMove(const Board *board, int move, MoveList *list)
 {
   list->moves[list->count].move = move;
   list->moves[list->count].score = 0;
@@ -667,7 +667,7 @@ void AddEnPassantMove(const Board* board, int move, MoveList* list)
 }
 
 // Add white pawn capture move to move list
-void AddWhitePawnCaptureMove(const Board* board, const int from, const int to, const int capture, MoveList* list)
+void AddWhitePawnCaptureMove(const Board *board, const int from, const int to, const int capture, MoveList *list)
 {
   ASSERT(IsPieceValidWithEmpty(capture));
   ASSERT(IsPositionOnBoard(from));
@@ -687,7 +687,7 @@ void AddWhitePawnCaptureMove(const Board* board, const int from, const int to, c
 }
 
 // Add white pawn quiet move to move list
-void AddWhitePawnQuietMove(const Board* board, const int from, const int to, MoveList* list)
+void AddWhitePawnQuietMove(const Board *board, const int from, const int to, MoveList *list)
 {
   ASSERT(IsPositionOnBoard(from));
   ASSERT(IsPositionOnBoard(to));
@@ -706,7 +706,7 @@ void AddWhitePawnQuietMove(const Board* board, const int from, const int to, Mov
 }
 
 // Add black pawn capture move to move list
-void AddBlackPawnCaptureMove(const Board* board, const int from, const int to, const int capture, MoveList* list)
+void AddBlackPawnCaptureMove(const Board *board, const int from, const int to, const int capture, MoveList *list)
 {
   ASSERT(IsPieceValidWithEmpty(capture));
   ASSERT(IsPositionOnBoard(from));
@@ -726,7 +726,7 @@ void AddBlackPawnCaptureMove(const Board* board, const int from, const int to, c
 }
 
 // Add black pawn quiet move to move list
-void AddBlackPawnQuietMove(const Board* board, const int from, const int to, MoveList* list)
+void AddBlackPawnQuietMove(const Board *board, const int from, const int to, MoveList *list)
 {
   ASSERT(IsPositionOnBoard(from));
   ASSERT(IsPositionOnBoard(to));
@@ -745,7 +745,7 @@ void AddBlackPawnQuietMove(const Board* board, const int from, const int to, Mov
 }
 
 // Generate all moves to move list
-void GenerateAllMoves(const Board *board, MoveList* list)
+void GenerateAllMoves(const Board *board, MoveList *list)
 {
   // Setup
   int position = EMPTY;
@@ -766,7 +766,8 @@ void GenerateAllMoves(const Board *board, MoveList* list)
       position = board->pieceList[WHITE_PAWN][i];
       ASSERT(IsPositionOnBoard(position));
 
-      if (board->pieces[position + 10] == EMPTY) {
+      if (board->pieces[position + 10] == EMPTY)
+      {
         AddWhitePawnQuietMove(board, position, position + 10, list);
         if (PositionToRank[position] == RANK_2 && board->pieces[position + 20] == EMPTY)
         {
@@ -824,7 +825,8 @@ void GenerateAllMoves(const Board *board, MoveList* list)
       position = board->pieceList[BLACK_PAWN][i];
       ASSERT(IsPositionOnBoard(position));
 
-      if (board->pieces[position - 10] == EMPTY) {
+      if (board->pieces[position - 10] == EMPTY)
+      {
         AddBlackPawnQuietMove(board, position, position - 10, list);
         if (PositionToRank[position] == RANK_7 && board->pieces[position - 20] == EMPTY)
         {
@@ -1120,20 +1122,20 @@ void TakeMove(Board *board)
   {
     switch (to)
     {
-      case C1:
-        MovePiece(D1, A1, board);
-        break;
-      case C8:
-        MovePiece(D8, A8, board);
-        break;
-      case G1:
-        MovePiece(F1, H1, board);
-        break;
-      case G8:
-        MovePiece(F8, H8, board);
-        break;
-      default:
-        ASSERT(FALSE);
+    case C1:
+      MovePiece(D1, A1, board);
+      break;
+    case C8:
+      MovePiece(D8, A8, board);
+      break;
+    case G1:
+      MovePiece(F1, H1, board);
+      break;
+    case G8:
+      MovePiece(F8, H8, board);
+      break;
+    default:
+      ASSERT(FALSE);
     }
   }
 
@@ -1190,20 +1192,20 @@ int MakeMove(Board *board, int move)
   {
     switch (to)
     {
-      case C1:
-        MovePiece(A1, D1, board);
-        break;
-      case C8:
-        MovePiece(A8, D8, board);
-        break;
-      case G1:
-        MovePiece(H1, F1, board);
-        break;
-      case G8:
-        MovePiece(H8, F8, board);
-        break;
-      default:
-        ASSERT(FALSE);
+    case C1:
+      MovePiece(A1, D1, board);
+      break;
+    case C8:
+      MovePiece(A8, D8, board);
+      break;
+    case G1:
+      MovePiece(H1, F1, board);
+      break;
+    case G8:
+      MovePiece(H8, F8, board);
+      break;
+    default:
+      ASSERT(FALSE);
     }
   }
 
@@ -1351,7 +1353,7 @@ void UpdateMaterial(Board *board)
 //// Forsyth–Edwards Notation (FEN) ////
 
 // Parse FEN notation
-int ParseFen(char* fen, Board* board)
+int ParseFen(char *fen, Board *board)
 {
   ASSERT(fen != NULL);
   ASSERT(board != NULL);
@@ -1369,37 +1371,69 @@ int ParseFen(char* fen, Board* board)
     count = 1;
     switch (*fen)
     {
-      // Pieces
-      case 'p': piece = BLACK_PAWN; break;
-      case 'r': piece = BLACK_ROOK; break;
-      case 'n': piece = BLACK_KNIGHT; break;
-      case 'b': piece = BLACK_BISHOP; break;
-      case 'q': piece = BLACK_QUEEN; break;
-      case 'k': piece = BLACK_KING; break;
-      case 'P': piece = WHITE_PAWN; break;
-      case 'R': piece = WHITE_ROOK; break;
-      case 'N': piece = WHITE_KNIGHT; break;
-      case 'B': piece = WHITE_BISHOP; break;
-      case 'Q': piece = WHITE_QUEEN; break;
-      case 'K': piece = WHITE_KING; break;
+    // Pieces
+    case 'p':
+      piece = BLACK_PAWN;
+      break;
+    case 'r':
+      piece = BLACK_ROOK;
+      break;
+    case 'n':
+      piece = BLACK_KNIGHT;
+      break;
+    case 'b':
+      piece = BLACK_BISHOP;
+      break;
+    case 'q':
+      piece = BLACK_QUEEN;
+      break;
+    case 'k':
+      piece = BLACK_KING;
+      break;
+    case 'P':
+      piece = WHITE_PAWN;
+      break;
+    case 'R':
+      piece = WHITE_ROOK;
+      break;
+    case 'N':
+      piece = WHITE_KNIGHT;
+      break;
+    case 'B':
+      piece = WHITE_BISHOP;
+      break;
+    case 'Q':
+      piece = WHITE_QUEEN;
+      break;
+    case 'K':
+      piece = WHITE_KING;
+      break;
 
-      // Empties
-      case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8':
-        piece = EMPTY;
-        count = *fen - '0';
-        break;
+    // Empties
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+      piece = EMPTY;
+      count = *fen - '0';
+      break;
 
-      // New rank
-      case '/': case ' ':
-        rank--;
-        file = FILE_A;
-        fen++;
-        continue;
+    // New rank
+    case '/':
+    case ' ':
+      rank--;
+      file = FILE_A;
+      fen++;
+      continue;
 
-      // Default
-      default:
-        printf("FEN syntax error\n");
-        return -1;
+    // Default
+    default:
+      printf("FEN syntax error\n");
+      return -1;
     }
 
     for (int i = 0; i < count; ++i)
@@ -1430,10 +1464,18 @@ int ParseFen(char* fen, Board* board)
 
     switch (*fen)
     {
-      case 'K': board->castle |= CASTLE_WHITE_KING; break;
-      case 'Q': board->castle |= CASTLE_WHITE_QUEEN; break;
-      case 'k': board->castle |= CASTLE_BLACK_KING; break;
-      case 'q': board->castle |= CASTLE_BLACK_QUEEN; break;
+    case 'K':
+      board->castle |= CASTLE_WHITE_KING;
+      break;
+    case 'Q':
+      board->castle |= CASTLE_WHITE_QUEEN;
+      break;
+    case 'k':
+      board->castle |= CASTLE_BLACK_KING;
+      break;
+    case 'q':
+      board->castle |= CASTLE_BLACK_QUEEN;
+      break;
     }
     fen++;
   }
@@ -1529,7 +1571,7 @@ void PrintBitboard(u64 key)
 }
 
 // Print attack board
-void PrintAttackBoard(const int side, const Board* board)
+void PrintAttackBoard(const int side, const Board *board)
 {
   int position = 0;
 
@@ -1553,7 +1595,7 @@ void PrintAttackBoard(const int side, const Board* board)
 }
 
 // Print board
-void PrintBoard(const Board* board)
+void PrintBoard(const Board *board)
 {
   printf("Game board:\n\n");
 
@@ -1590,7 +1632,7 @@ void PrintBoard(const Board* board)
 }
 
 // Print move list
-void PrintMoveList(const MoveList* moveList)
+void PrintMoveList(const MoveList *moveList)
 {
   int move = 0;
   int score = 0;
@@ -1608,7 +1650,7 @@ void PrintMoveList(const MoveList* moveList)
 //// Main ////
 
 // Main function
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
   // Initialize engine
   Init();

@@ -513,7 +513,7 @@ int IsPositionAttacked(const int position, const int side, const Board *board)
   for (int i = 0; i < 8; ++i)
   {
     piece = board->pieces[position + KnightAttackDirection[i]];
-    if (KnightPieces[piece] && PieceColors[piece] == side)
+    if (piece != OB && KnightPieces[piece] && PieceColors[piece] == side)
     {
       return TRUE;
     }
@@ -898,7 +898,7 @@ void GenerateAllMoves(const Board *board, MoveList *list)
         {
           if (board->pieces[target] != EMPTY)
           {
-            if (PieceColors[board->pieces[target]] == board->side ^ 1)
+            if (PieceColors[board->pieces[target]] == (board->side ^ 1))
             {
               AddCaptureMove(board, GenerateMoveKey(position, target, board->pieces[target], EMPTY, FLAG_EMPTY), list);
             }
@@ -915,7 +915,7 @@ void GenerateAllMoves(const Board *board, MoveList *list)
 
   // Generate non-slide piece moves
   pieceIndex = LoopNonSlideIndex[board->side];
-  piece = NonSlidePieceIterator[pieceIndex];
+  piece = NonSlidePieceIterator[pieceIndex++];
   while (piece != EMPTY)
   {
     ASSERT(IsPieceValidWithoutEmpty(piece));
@@ -936,7 +936,7 @@ void GenerateAllMoves(const Board *board, MoveList *list)
         }
         if (board->pieces[target] != EMPTY)
         {
-          if (PieceColors[board->pieces[target]] == board->side ^ 1)
+          if (PieceColors[board->pieces[target]] == (board->side ^ 1))
           {
             AddCaptureMove(board, GenerateMoveKey(position, target, board->pieces[target], EMPTY, FLAG_EMPTY), list);
           }
@@ -1655,11 +1655,31 @@ int main(int argc, char *argv[])
   // Initialize engine
   Init();
 
-  // Print game board
+  // Set up board and move list
   Board board[1];
+  MoveList list[1];
   ParseFen(FEN_INIT, board);
+  GenerateAllMoves(board, list);
+
   PrintBoard(board);
-  ASSERT(CheckBoard(board));
+  getchar();
+
+  // Iterate moves
+  int move = 0;
+  for (int i = 0; i < list->count; ++i)
+  {
+    move = list->moves[i].move;
+    if (!MakeMove(board, move))
+    {
+      continue;
+    }
+
+    printf("\nMove: %s\n", GetStringFromMoveKey(move));
+    PrintBoard(board);
+    TakeMove(board);
+
+    getchar();
+  }
 
   // Return
   return 0;

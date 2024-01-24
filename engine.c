@@ -1647,6 +1647,65 @@ void PrintMoveList(const MoveList *moveList)
   printf("Total moves: %d\n", moveList->count);
 }
 
+//// Perft ////
+
+long leafNodes;
+
+// Perft function
+void Perft(int depth, Board *board)
+{
+  ASSERT(CheckBoard(board));
+
+  if (depth == 0)
+  {
+    leafNodes++;
+    return;
+  }
+
+  MoveList list[1];
+  GenerateAllMoves(board, list);
+
+  for (int i = 0; i < list->count; ++i)
+  {
+    if (!MakeMove(board, list->moves[i].move))
+    {
+      continue;
+    }
+    Perft(depth - 1, board);
+    TakeMove(board);
+  }
+}
+
+// Perft testing function
+void PerftTest(int depth, Board *board)
+{
+  ASSERT(CheckBoard(board));
+
+  PrintBoard(board);
+  printf("Start perft test with depth %d\n", depth);
+  leafNodes = 0;
+
+  MoveList list[1];
+  GenerateAllMoves(board, list);
+
+  int move;
+  for (int i = 0; i < list->count; ++i)
+  {
+    move = list->moves[i].move;
+    if (!MakeMove(board, move))
+    {
+      continue;
+    }
+
+    long curNode = leafNodes;
+    Perft(depth - 1, board);
+    TakeMove(board);
+    long prevNode = leafNodes - curNode;
+    printf("Move %d: %s with %ld nodes\n", i + 1, GetStringFromMoveKey(move), prevNode);
+  }
+  printf("Perft test complete with %ld nodes visited\n", leafNodes);
+}
+
 //// Main ////
 
 // Main function
@@ -1659,27 +1718,7 @@ int main(int argc, char *argv[])
   Board board[1];
   MoveList list[1];
   ParseFen(FEN_INIT, board);
-  GenerateAllMoves(board, list);
-
-  PrintBoard(board);
-  getchar();
-
-  // Iterate moves
-  int move = 0;
-  for (int i = 0; i < list->count; ++i)
-  {
-    move = list->moves[i].move;
-    if (!MakeMove(board, move))
-    {
-      continue;
-    }
-
-    printf("\nMove: %s\n", GetStringFromMoveKey(move));
-    PrintBoard(board);
-    TakeMove(board);
-
-    getchar();
-  }
+  PerftTest(3, board);
 
   // Return
   return 0;

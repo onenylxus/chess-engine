@@ -42,7 +42,7 @@ typedef unsigned long long u64;
 
 // Random hash key
 #ifndef DEBUG
-#define RAND_HASH
+#define RAND_HASH 0
 #else
 #define RAND_HASH           \
 (                           \

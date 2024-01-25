@@ -785,14 +785,17 @@ void GenerateAllMoves(const Board *board, MoveList *list)
         AddWhitePawnCaptureMove(board, position, position + 11, board->pieces[position + 11], list);
       }
 
-      if (position + 9 == board->enPassant)
+      if (board->enPassant != XX)
       {
-        AddCaptureMove(board, GenerateMoveKey(position, position + 9, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
-      }
+        if (position + 9 == board->enPassant)
+        {
+          AddEnPassantMove(board, GenerateMoveKey(position, position + 9, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
+        }
 
-      if (position + 11 == board->enPassant)
-      {
-        AddCaptureMove(board, GenerateMoveKey(position, position + 11, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
+        if (position + 11 == board->enPassant)
+        {
+          AddEnPassantMove(board, GenerateMoveKey(position, position + 11, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
+        }
       }
     }
 
@@ -834,24 +837,27 @@ void GenerateAllMoves(const Board *board, MoveList *list)
         }
       }
 
-      if (IsPositionOnBoard(position - 9) && PieceColors[board->pieces[position - 9]] == BLACK)
+      if (IsPositionOnBoard(position - 9) && PieceColors[board->pieces[position - 9]] == WHITE)
       {
         AddBlackPawnCaptureMove(board, position, position - 9, board->pieces[position - 9], list);
       }
 
-      if (IsPositionOnBoard(position - 11) && PieceColors[board->pieces[position - 11]] == BLACK)
+      if (IsPositionOnBoard(position - 11) && PieceColors[board->pieces[position - 11]] == WHITE)
       {
         AddBlackPawnCaptureMove(board, position, position - 11, board->pieces[position - 11], list);
       }
 
-      if (position - 9 == board->enPassant)
+      if (board->enPassant != XX)
       {
-        AddCaptureMove(board, GenerateMoveKey(position, position - 9, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
-      }
+        if (position - 9 == board->enPassant)
+        {
+          AddEnPassantMove(board, GenerateMoveKey(position, position - 9, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
+        }
 
-      if (position - 11 == board->enPassant)
-      {
-        AddCaptureMove(board, GenerateMoveKey(position, position - 11, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
+        if (position - 11 == board->enPassant)
+        {
+          AddEnPassantMove(board, GenerateMoveKey(position, position - 11, EMPTY, EMPTY, FLAG_EN_PASSANT), list);
+        }
       }
     }
 
@@ -894,7 +900,7 @@ void GenerateAllMoves(const Board *board, MoveList *list)
         direction = MoveDirections[piece][j];
         target = position + direction;
 
-        while (!IsPositionOnBoard(target))
+        while (IsPositionOnBoard(target))
         {
           if (board->pieces[target] != EMPTY)
           {

@@ -46,10 +46,58 @@ void ConversionTest()
   }
 }
 
+// Bitboard test
+void BitboardTest()
+{
+  // Print message
+  printf("Running bitboard tests...\n");
+
+  // Define variables
+  int indices[8];
+  int count = 0;
+  int index = 0;
+  u64 bb = 0ULL;
+  int popped = FALSE;
+
+  // Generate random indices
+  while (count < 8)
+  {
+    index = rand() % 63;
+    for (int i = 0; i < count; ++i)
+    {
+      if (index == indices[i])
+      {
+        continue;
+      }
+    }
+    indices[count++] = index;
+    bb |= (1ULL << index);
+  }
+
+  // Test bitboard with count
+  ASSERT(COUNT(bb) == 8);
+
+  // Test bitboard with pop
+  while (bb)
+  {
+    popped = FALSE;
+    index = POP(&bb);
+    for (int i = 0; i < count; ++i)
+    {
+      if (index == indices[i])
+      {
+        popped = TRUE;
+      }
+    }
+    ASSERT(popped);
+  }
+}
+
 // Main test function
 void Test()
 {
   #ifdef DEBUG
     ConversionTest();
+    BitboardTest();
   #endif
 }

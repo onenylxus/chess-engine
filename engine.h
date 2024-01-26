@@ -19,7 +19,7 @@
 #define MAX_PIECES 10       // Maximum number of pieces of same type
 
 //// Type Definitions ////
-
+typedef unsigned int u32;
 typedef unsigned long long u64;
 
 //// Enumerators ////
@@ -162,6 +162,8 @@ typedef struct
 #define FR2POS(f, r) ((r) * 10 + (f) + 21) // Conversion from file and rank to position
 #define POS2IDX(p) (PositionToIndex[p])    // Conversion from position to index
 #define IDX2POS(i) (IndexToPosition[i])    // Conversion from index to position
+#define POP(b) (PopBit(b))                 // Pop bit
+#define COUNT(b) (CountBit(b))             // Count bit
 
 //// Global variables ////
 
@@ -171,12 +173,12 @@ extern int IndexToPosition[INDEX_SIZE];    // Conversion table from index to pos
 //// External functions ////
 
 // init.c
-extern void InitConversion();
 extern void Init();
 
 // bitboard.c
+extern int PopBit(u64 *bb);
+extern int CountBit(u64 bb);
 extern void PrintBitboard(u64 bb);
 
 // tests.c
-extern void ConversionTest();
 extern void Test();

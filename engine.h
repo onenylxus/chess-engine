@@ -160,6 +160,8 @@ typedef struct
 #endif
 
 #define FR2POS(f, r) ((r) * 10 + (f) + 21) // Conversion from file and rank to position
+#define POS2IDX(p) (PositionToIndex[p])    // Conversion from position to index
+#define IDX2POS(i) (IndexToPosition[i])    // Conversion from index to position
 
 //// Global variables ////
 
@@ -172,5 +174,9 @@ extern int IndexToPosition[INDEX_SIZE];    // Conversion table from index to pos
 extern void InitConversion();
 extern void Init();
 
+// bitboard.c
+extern void PrintBitboard(u64 bb);
+
 // tests.c
 extern void ConversionTest();
+extern void Test();

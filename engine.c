@@ -7,10 +7,8 @@ int main()
   // Initialize
   Init();
 
-  // Run debug tests
-#ifdef DEBUG
-  ConversionTest();
-#endif
+  // Run tests
+  Test();
 
   // Return
   return 0;

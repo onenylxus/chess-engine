@@ -45,3 +45,11 @@ void ConversionTest()
     ASSERT(IndexToPosition[i] == indexTable[i]);
   }
 }
+
+// Main test function
+void Test()
+{
+  #ifdef DEBUG
+    ConversionTest();
+  #endif
+}

@@ -1,5 +1,6 @@
 // Include
 #pragma once
+#include <stdio.h>
 #include <stdlib.h>
 
 //// Constants ////
@@ -122,24 +123,41 @@ typedef struct
 // Board
 typedef struct
 {
-  int pieces[POSITION_SIZE];   // Piece type of each position
-  u64 pawns[GROUP_SIZE];       // Pawn positions in bit for each player and combined
-  int kings[PLAYER_SIZE];      // King positions for each player
-  int side;                    // Current player side to move
-  int castle;                  // Castle permutation
-  int enPassant;               // En passant position
-  int fiftyMoves;              // Move counter for fifty moves
-  int currentPly;              // Current ply
-  int historyPly;              // History ply
-  u64 positionKey;             // Unique key for position
-  int counts[PIECE_SIZE];      // Total number of pieces on the board
-  int bigPieces[GROUP_SIZE];   // Number of big pieces (not pawns) on the board for each player
-  int majorPieces[GROUP_SIZE]; // Number of major pieces (rooks and queens) on the board for each player
-  int minorPieces[GROUP_SIZE]; // Number of minor pieces (knights and bishops) on the board for each player
-  Record history[MAX_MOVES];   // History records of each move
+  int pieces[POSITION_SIZE];             // Piece type of each position
+  u64 pawns[GROUP_SIZE];                 // Pawn positions in bit for each player and combined
+  int kings[PLAYER_SIZE];                // King positions for each player
+  int side;                              // Current player side to move
+  int castle;                            // Castle permutation
+  int enPassant;                         // En passant position
+  int fiftyMoves;                        // Move counter for fifty moves
+  int currentPly;                        // Current ply
+  int historyPly;                        // History ply
+  u64 positionKey;                       // Unique key for position
+  int counts[PIECE_SIZE];                // Total number of pieces on the board
+  int bigPieces[GROUP_SIZE];             // Number of big pieces (not pawns) on the board for each player
+  int majorPieces[GROUP_SIZE];           // Number of major pieces (rooks and queens) on the board for each player
+  int minorPieces[GROUP_SIZE];           // Number of minor pieces (knights and bishops) on the board for each player
+  int pieceList[PIECE_SIZE][MAX_PIECES]; // Position of each piece sorted by piece type
+  Record history[MAX_MOVES];             // History records of each move
 } Board;
 
 //// Macros ////
+
+// Assert function
+#ifndef DEBUG
+#define ASSERT(n)
+#else
+#define ASSERT(n)                     \
+  if (!(n))                           \
+  {                                   \
+    printf("Assert: %s ", #n);        \
+    printf("on %s ", __DATE__);       \
+    printf("at %s ", __TIME__);       \
+    printf("in file %s ", __FILE__);  \
+    printf("at line %d\n", __LINE__); \
+    exit(1);                          \
+  }
+#endif
 
 #define FR2POS(f, r) ((r) * 10 + (f) + 21) // Conversion from file and rank to position
 
@@ -153,3 +171,6 @@ extern int IndexToPosition[INDEX_SIZE];    // Conversion table from index to pos
 // init.c
 extern void InitConversion();
 extern void Init();
+
+// tests.c
+extern void ConversionTest();

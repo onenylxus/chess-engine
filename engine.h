@@ -10,7 +10,11 @@
 #define INDEX_SIZE 64       // Index size (8x8 real board)
 #define PLAYER_SIZE 2       // Number of players (white and black)
 #define GROUP_SIZE 3        // Number of groups (white, black and both)
-#define PIECE_TYPE_SIZE 13  // Number of piece types
+#define PIECE_SIZE 13       // Number of piece types
+#define CASTLE_SIZE 16      // Castle permutation size
+#define MAX_MOVES 2048      // Maximum number of moves
+#define MAX_CHOICES 256     // Maximum number of choices
+#define MAX_PIECES 10       // Maximum number of pieces of same type
 
 //// Type Definitions ////
 typedef unsigned long long u64;
@@ -24,7 +28,7 @@ enum Boolean
   TRUE
 };
 
-// Players
+// Player
 enum Player
 {
   WHITE,
@@ -78,7 +82,7 @@ enum Rank
   RANK_X
 };
 
-// Positions
+// Position
 enum Position
 {
   A1 = 21, B1, C1, D1, E1, F1, G1, H1,
@@ -91,3 +95,44 @@ enum Position
   A8 = 91, B8, C8, D8, E8, F8, G8, H8,
   XX
 };
+
+// Castling
+enum Castling
+{
+  CASTLE_WHITE_KING = 1,
+  CASTLE_WHITE_QUEEN = 2,
+  CASTLE_BLACK_KING = 4,
+  CASTLE_BLACK_QUEEN = 8
+};
+
+//// Structures ////
+
+// Record
+typedef struct
+{
+  int side;        // Current player side to move
+  int castle;      // Castle permutation
+  int enPassant;   // En passant position
+  int fiftyMoves;  // Move counter for fifty moves
+  u64 positionKey; // Unique key for position
+} Record;
+
+// Board
+typedef struct
+{
+  int pieces[POSITION_SIZE];   // Piece type of each position
+  u64 pawns[GROUP_SIZE];       // Pawn positions in bit for each player and combined
+  int kings[PLAYER_SIZE];      // King positions for each player
+  int side;                    // Current player side to move
+  int castle;                  // Castle permutation
+  int enPassant;               // En passant position
+  int fiftyMoves;              // Move counter for fifty moves
+  int currentPly;              // Current ply
+  int historyPly;              // History ply
+  u64 positionKey;             // Unique key for position
+  int counts[PIECE_SIZE];      // Total number of pieces on the board
+  int bigPieces[GROUP_SIZE];   // Number of big pieces (not pawns) on the board for each player
+  int majorPieces[GROUP_SIZE]; // Number of major pieces (rooks and queens) on the board for each player
+  int minorPieces[GROUP_SIZE]; // Number of minor pieces (knights and bishops) on the board for each player
+  Record history[MAX_MOVES];   // History records of each move
+} Board;

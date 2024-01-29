@@ -71,11 +71,15 @@ void BitboardTest()
       }
     }
     indices[count++] = index;
-    bb |= (1ULL << index);
+    SET(bb, index);
   }
 
-  // Test bitboard with count
+  // Test bitboard with set and count
   ASSERT(COUNT(bb) == 8);
+
+  // Test bitboard with clear
+  CLEAR(bb, indices[0]);
+  ASSERT(COUNT(bb) == 7);
 
   // Test bitboard with pop
   while (bb)

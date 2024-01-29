@@ -160,15 +160,19 @@ typedef struct
 #endif
 
 #define FR2POS(f, r) ((r) * 10 + (f) + 21) // Conversion from file and rank to position
-#define POS2IDX(p) (PositionToIndex[p])    // Conversion from position to index
-#define IDX2POS(i) (IndexToPosition[i])    // Conversion from index to position
-#define POP(b) (PopBit(b))                 // Pop bit
-#define COUNT(b) (CountBit(b))             // Count bit
+#define POS2IDX(p) PositionToIndex[p]      // Conversion from position to index
+#define IDX2POS(i) IndexToPosition[i]      // Conversion from index to position
+#define POP(b) PopBit(b)                   // Pop bit
+#define COUNT(b) CountBit(b)               // Count bit
+#define SET(b, i) ((b) |= SetMask[i])      // Set bit
+#define CLEAR(b, i) ((b) &= ClearMask[i])  // Clear bit
 
 //// Global variables ////
 
 extern int PositionToIndex[POSITION_SIZE]; // Conversion table from position to index
 extern int IndexToPosition[INDEX_SIZE];    // Conversion table from index to position
+extern u64 SetMask[INDEX_SIZE];            // Bitboard set bit mask value
+extern u64 ClearMask[INDEX_SIZE];          // Bitboard clear bit mask value
 
 //// External functions ////
 

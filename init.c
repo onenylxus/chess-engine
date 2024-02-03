@@ -1,11 +1,23 @@
 // Include
 #include "engine.h"
 
+// Random u64 value generator
+#define RAND_U64 (           \
+  (u64)rand() +              \
+  (u64)rand() << 15 +        \
+  (u64)rand() << 30 +        \
+  (u64)rand() << 45 +        \
+  ((u64)rand() & 0x0f) << 60 \
+)
+
 // Define global variables
 int PositionToIndex[POSITION_SIZE];
 int IndexToPosition[INDEX_SIZE];
 u64 SetMask[INDEX_SIZE];
 u64 ClearMask[INDEX_SIZE];
+u64 PieceKeys[PIECE_SIZE][POSITION_SIZE];
+u64 SideKey;
+u64 CastleKeys[CASTLE_SIZE];
 
 // Initialize conversions
 void InitConversion()
@@ -48,9 +60,28 @@ void InitBitMask()
   }
 }
 
+// Initialize hash keys
+void InitHashKeys()
+{
+  // Fill hash keys
+  for (int i = 0; i < PIECE_SIZE; ++i)
+  {
+    for (int j = 0; j < POSITION_SIZE; ++j)
+    {
+      PieceKeys[i][j] = RAND_U64;
+    }
+  }
+  SideKey = RAND_U64;
+  for (int i = 0; i < CASTLE_SIZE; ++i)
+  {
+    CastleKeys[i] = RAND_U64;
+  }
+}
+
 // Initialize function
 void Init()
 {
   InitConversion();
   InitBitMask();
+  InitHashKeys();
 }

@@ -134,9 +134,9 @@ typedef struct
   int historyPly;                        // History ply
   u64 positionKey;                       // Unique key for position
   int counts[PIECE_SIZE];                // Total number of pieces on the board
-  int bigPieces[GROUP_SIZE];             // Number of big pieces (not pawns) on the board for each player
-  int majorPieces[GROUP_SIZE];           // Number of major pieces (rooks and queens) on the board for each player
-  int minorPieces[GROUP_SIZE];           // Number of minor pieces (knights and bishops) on the board for each player
+  int bigPieces[GROUP_SIZE];             // Number of big pieces (not pawns) on the board for each player and combined
+  int majorPieces[GROUP_SIZE];           // Number of major pieces (rooks and queens) on the board for each player and combined
+  int minorPieces[GROUP_SIZE];           // Number of minor pieces (knights and bishops) on the board for each player and combined
   int pieceList[PIECE_SIZE][MAX_PIECES]; // Position of each piece sorted by piece type
   Record history[MAX_MOVES];             // History records of each move
 } Board;
@@ -160,19 +160,22 @@ typedef struct
 #endif
 
 #define FR2POS(f, r) ((r) * 10 + (f) + 21) // Conversion from file and rank to position
-#define POS2IDX(p) PositionToIndex[p]      // Conversion from position to index
-#define IDX2POS(i) IndexToPosition[i]      // Conversion from index to position
-#define POP(b) PopBit(b)                   // Pop bit
-#define COUNT(b) CountBit(b)               // Count bit
+#define POS2IDX(p) (PositionToIndex[p])    // Conversion from position to index
+#define IDX2POS(i) (IndexToPosition[i])    // Conversion from index to position
+#define POP(b) (PopBit(b))                 // Pop bit
+#define COUNT(b) (CountBit(b))             // Count bit
 #define SET(b, i) ((b) |= SetMask[i])      // Set bit
 #define CLEAR(b, i) ((b) &= ClearMask[i])  // Clear bit
 
 //// Global variables ////
 
-extern int PositionToIndex[POSITION_SIZE]; // Conversion table from position to index
-extern int IndexToPosition[INDEX_SIZE];    // Conversion table from index to position
-extern u64 SetMask[INDEX_SIZE];            // Bitboard set bit mask value
-extern u64 ClearMask[INDEX_SIZE];          // Bitboard clear bit mask value
+extern int PositionToIndex[POSITION_SIZE];       // Conversion table from position to index
+extern int IndexToPosition[INDEX_SIZE];          // Conversion table from index to position
+extern u64 SetMask[INDEX_SIZE];                  // Bitboard set bit mask value
+extern u64 ClearMask[INDEX_SIZE];                // Bitboard clear bit mask value
+extern u64 PieceKeys[PIECE_SIZE][POSITION_SIZE]; // Hash key for each piece type and position
+extern u64 SideKey;                              // Hash key for player side
+extern u64 CastleKeys[CASTLE_SIZE];              // Hash key for each castling permutation
 
 //// External functions ////
 
@@ -183,6 +186,9 @@ extern void Init();
 extern int PopBit(u64 *bb);
 extern int CountBit(u64 bb);
 extern void PrintBitboard(u64 bb);
+
+// hashkey.c
+extern u64 GeneratePositionKey(const Board *board);
 
 // tests.c
 extern void Test();
